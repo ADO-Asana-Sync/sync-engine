@@ -11,15 +11,9 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Pong!")
-	})
+	r.HandleFunc("/ping", pingHandler)
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Pong!")
-	})
+	r.HandleFunc("/", pingHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -27,4 +21,9 @@ func main() {
 	}
 	fmt.Printf("Web server starting at http://localhost:%s\n", port)
 	http.ListenAndServe(":"+port, r)
+}
+
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Pong!")
 }
