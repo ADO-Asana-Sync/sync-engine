@@ -17,7 +17,8 @@ func main() {
 	})
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello, you've reached the homepage!")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "Pong!")
 	})
 
 	port := os.Getenv("PORT")
