@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-
-import (
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gorilla/mux"
 )
@@ -27,7 +24,10 @@ func main() {
 		port = "8080"
 	}
 	fmt.Printf("Web server starting at http://localhost:%s\n", port)
-	http.ListenAndServe(":"+port, r)
+	err := http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
