@@ -11,6 +11,11 @@ import (
 func main() {
 	r := mux.NewRouter()
 
+	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "Pong!")
+	})
+
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello, you've reached the homepage!")
 	})
