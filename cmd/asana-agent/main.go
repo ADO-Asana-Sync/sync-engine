@@ -19,5 +19,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	fmt.Printf("Web server starting at http://localhost:%s\n", port)
 	http.ListenAndServe(":"+port, r)
 }
