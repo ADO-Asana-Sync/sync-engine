@@ -4,21 +4,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"github.com/spf13/viper"
 
 	"github.com/gorilla/mux"
 )
 
 type Config struct {
-	AsanaPAT string `mapstructure:"ASANA_PAT"`
-	Port     string `mapstructure:"PORT"`
+	PAT  string `mapstructure:"PAT"`
+	Port string `mapstructure:"PORT"`
 }
 
 func loadConfig() (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("asana_agent") // use ASANA_AGENT_ as prefix for environment variables
-	viper.BindEnv("ASANA_PAT")
-	viper.BindEnv("PORT")
+	err := viper.BindEnv("PAT")
+	if err != nil {
+		return nil, err
+	}
+	err = viper.BindEnv("PORT")
+	if err != nil {
+		return nil, err
+	}
 
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
