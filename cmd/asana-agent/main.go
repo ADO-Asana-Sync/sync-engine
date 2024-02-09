@@ -5,15 +5,22 @@ import (
 	"net/http"
 	"os"
 
+import (
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gorilla/mux"
 )
 
-func main() {
+func setupRouter() *mux.Router {
 	r := mux.NewRouter()
-
 	r.HandleFunc("/ping", pingHandler)
-
 	r.HandleFunc("/", pingHandler)
+	return r
+}
+
+func main() {
+	r := setupRouter()
 
 	port := os.Getenv("PORT")
 	if port == "" {
