@@ -11,8 +11,8 @@ import (
 
 func setupRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/ping", pingHandler)
-	r.HandleFunc("/", pingHandler)
+	r.HandleFunc("/api/ping", pingHandler)
+	r.HandleFunc("/api/", pingHandler)
 	return r
 }
 

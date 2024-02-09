@@ -11,7 +11,7 @@ func TestPingHandler(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL + "/ping")
+	resp, err := http.Get(ts.URL + "/api/ping")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -26,7 +26,7 @@ func TestRootHandler(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL + "/")
+	resp, err := http.Get(ts.URL + "/api/")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
