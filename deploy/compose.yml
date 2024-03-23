@@ -1,0 +1,35 @@
+name: sync
+services:
+  sync:
+    image: ado-asana-sync_sync:latest
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    environment:
+      MONGO_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+    # restart: unless-stopped
+
+  mongo:
+    image: mongo:4
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD}"
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    volumes:
+      - ./data/mongo:/data/db
+
+  mongo-express:
+    image: mongo-express:1-20
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_ADMIN_PASSWORD}"
+      ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_ADMIN_USERNAME}"
+      ME_CONFIG_BASICAUTH: "true"
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD}"
+      ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+    restart: unless-stopped
