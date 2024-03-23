@@ -9,9 +9,9 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "auto",
-			"program": "${workspaceFolder}/cmd/asana-agent",
+			"program": "${workspaceFolder}/cmd/sync",
 			"envFile": [
-				"${workspaceFolder}/cmd/asana-agent/.env"
+				"${workspaceFolder}/cmd/sync/.env"
 			],
 		}
 	]
