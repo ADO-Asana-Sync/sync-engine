@@ -1,0 +1,6 @@
+{
+	"sonarlint.connectedMode.project": {
+		"connectionId": "ADO-Asana-Sync",
+		"projectKey": "ADO-Asana-Sync_sync-engine"
+	}
+}
