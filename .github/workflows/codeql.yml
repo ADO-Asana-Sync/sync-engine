@@ -65,7 +65,7 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.10.2
       - name: Build sync
-        run: go build -v go build -ldflags "-s -w" -o ${{ github.workspace }}/staging/sync ./cmd/sync
+        run: go build -v -ldflags "-s -w" -o ${{ github.workspace }}/staging/sync ./cmd/sync
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
