@@ -6,8 +6,13 @@
 	"cSpell.words": [
 		"azuredevops",
 		"connstr",
-		"glog",
 		"Infof",
-		"otel"
+		"logrus",
+		"otel",
+		"sirupsen",
+		"Wiql",
+		"wlog",
+		"workitems",
+		"workitemtracking"
 	]
 }
