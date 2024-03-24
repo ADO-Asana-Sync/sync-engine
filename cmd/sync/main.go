@@ -88,12 +88,12 @@ func (app *App) setup() error {
 	app.Azure = &azure.Azure{}
 	org := os.Getenv("ADO_ORG_URL")
 	pat := os.Getenv("ADO_PAT")
-	app.Azure.Connect(org, pat)
+	app.Azure.Connect(ctx, org, pat)
 
 	// Asana setup.
 	glog.Infof("connecting to Asana")
 	app.Asana = &asana.Asana{}
-	app.Asana.Connect(os.Getenv("ASANA_PAT"))
+	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
 	return nil
 }
