@@ -3,7 +3,6 @@ module github.com/ADO-Asana-Sync/sync-engine
 go 1.22
 
 require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/sirupsen/logrus v1.9.3
 	github.com/uptrace/uptrace-go v1.24.0
 	go.mongodb.org/mongo-driver v1.14.0
@@ -14,6 +13,7 @@ require (
 
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -49,6 +49,6 @@ require (
 require (
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/range-labs/go-asana v0.0.0-20220425181030-1627f841c4a7
-	golang.org/x/oauth2 v0.17.0
+	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0 // indirect
 )
