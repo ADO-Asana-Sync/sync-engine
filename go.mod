@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/golang/glog v1.2.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/uptrace/uptrace-go v1.24.0
 	go.mongodb.org/mongo-driver v1.14.0
 	go.opentelemetry.io/otel v1.24.0

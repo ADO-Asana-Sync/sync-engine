@@ -18,7 +18,7 @@ func (a *Asana) Connect(ctx context.Context, pat string) {
 	_, span := tracer.Start(ctx, "asana.Connect")
 	defer span.End()
 
-	asanaCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	asanaCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	tok := &oauth2.Token{AccessToken: pat}

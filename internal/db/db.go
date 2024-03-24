@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,7 +31,7 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 	_, span := tracer.Start(ctx, "db.Connect")
 	defer span.End()
 
-	dbCtx, cancel := context.WithTimeout(context.Background(), ConnectionTimeout)
+	dbCtx, cancel := context.WithTimeout(ctx, ConnectionTimeout)
 	defer cancel()
 
 	c, err := mongo.Connect(dbCtx, options.Client().ApplyURI(uri))
@@ -50,6 +49,5 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 		return err
 	}
 
-	log.Println("Connected to MongoDB!")
 	return nil
 }

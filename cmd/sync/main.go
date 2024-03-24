@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -30,34 +33,66 @@ type App struct {
 }
 
 func main() {
-	glog.Infof("Sync process started. Version: %v, commit: %v, date: %v", version, commit, date)
-	app := &App{}
-	err := app.setup()
-	if err != nil {
-		glog.Fatalf("error setting up the app: %v", err)
-	}
-	defer func() {
-		err := app.DB.Client.Disconnect(context.Background())
-		if err != nil {
-			glog.Fatalf("error disconnecting from the DB: %v", err)
-		}
-		err = app.UptraceShutdown(context.Background())
-		if err != nil {
-			glog.Fatalf("error shutting down Uptrace: %v", err)
-		}
-	}()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
-	// List all projects
-	projects, err := app.DB.Projects()
+	log.Infof("Sync process started. Version: %v, commit: %v, date: %v", version, commit, date)
+	app := &App{}
+	err := app.setup(ctx)
 	if err != nil {
-		glog.Fatalf("error listing projects: %v", err)
+		log.WithError(err).Fatal("error setting up the app")
 	}
-	spew.Dump(projects)
+	defer func(ctx context.Context) {
+		err := app.DB.Client.Disconnect(ctx)
+		if err != nil {
+			log.WithError(err).Fatal("error disconnecting from the DB")
+		}
+		err = app.UptraceShutdown(ctx)
+		if err != nil {
+			log.WithError(err).Fatal("error shutting down Uptrace")
+		}
+	}(ctx)
+
+	// Create the worker pool.
+	numWorkers := 10 // Set the number of concurrent workers here or use an environment variable
+	taskCh := make(chan SyncTask)
+
+	for i := 0; i < numWorkers; i++ {
+		go app.worker(ctx, i, taskCh)
+	}
+
+	// Create the controller.
+	var st time.Duration
+	for {
+		ctx, span := app.Tracer.Start(ctx, "sync.main")
+		app.controller(ctx, taskCh)
+
+		st = getSleepTime()
+		span.SetAttributes(attribute.Int64("sleepTimeSec", int64(st.Seconds())))
+		span.End()
+
+		log.Infof("sleeping for %v", st)
+		time.Sleep(st)
+	}
 }
 
-func (app *App) setup() error {
+func getSleepTime() time.Duration {
+	sleepTime := os.Getenv("SLEEP_TIME")
+	if sleepTime == "" {
+		return 5 * time.Minute
+	}
+
+	d, err := time.ParseDuration(sleepTime)
+	if err != nil {
+		log.WithError(err).Warn("unable to parse SLEEP_TIME variable, defaulting to 5m")
+		return 5 * time.Minute
+	}
+	return d
+}
+
+func (app *App) setup(ctx context.Context) error {
 	// Uptrace setup.
-	glog.Infof("Connecting to Uptrace")
+	log.Info("connecting to Uptrace")
 	dsn := os.Getenv("UPTRACE_DSN")
 	environment := os.Getenv("UPTRACE_ENVIRONMENT")
 	uptrace.ConfigureOpentelemetry(
@@ -69,29 +104,29 @@ func (app *App) setup() error {
 	app.UptraceShutdown = uptrace.Shutdown
 	app.Tracer = otel.Tracer("")
 
-	ctx := context.Background()
 	ctx, span := app.Tracer.Start(ctx, "sync.setup")
 	defer span.End()
 
 	// Database setup.
-	glog.Infof("connecting to the DB")
+	log.Info("connecting to the DB")
 	app.DB = &db.DB{}
 	connstr := os.Getenv("MONGO_URI")
 	err := app.DB.Connect(ctx, connstr)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
 		return fmt.Errorf("error connecting to the DB: %v", err)
 	}
 
 	// Azure DevOps setup.
-	glog.Infof("connecting to Azure DevOps")
+	log.Info("connecting to Azure DevOps")
 	app.Azure = &azure.Azure{}
 	org := os.Getenv("ADO_ORG_URL")
 	pat := os.Getenv("ADO_PAT")
 	app.Azure.Connect(ctx, org, pat)
 
 	// Asana setup.
-	glog.Infof("connecting to Asana")
+	log.Info("connecting to Asana")
 	app.Asana = &asana.Asana{}
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
