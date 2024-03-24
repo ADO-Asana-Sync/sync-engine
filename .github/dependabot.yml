@@ -5,7 +5,17 @@
 
 version: 2
 updates:
-  - package-ecosystem: "go" # See documentation for possible values
+  - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  # Maintain dependencies for docker
+  - package-ecosystem: "docker"
+    directory: "/"
     schedule:
       interval: "weekly"
