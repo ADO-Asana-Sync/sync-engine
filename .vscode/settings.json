@@ -1,0 +1,18 @@
+{
+	"sonarlint.connectedMode.project": {
+		"connectionId": "ADO-Asana-Sync",
+		"projectKey": "ADO-Asana-Sync_sync-engine"
+	},
+	"cSpell.words": [
+		"azuredevops",
+		"connstr",
+		"Infof",
+		"logrus",
+		"otel",
+		"sirupsen",
+		"Wiql",
+		"wlog",
+		"workitems",
+		"workitemtracking"
+	]
+}
