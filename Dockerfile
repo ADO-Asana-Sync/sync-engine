@@ -18,6 +18,7 @@ FROM alpine:3
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/* ./
+USER sync
 ENV MONGO_URI=""
 CMD [ "./sync" ]
 EXPOSE 8080
