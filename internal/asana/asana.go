@@ -8,12 +8,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func NewClient(pat string) *http.Client {
+type Asana struct {
+	Client *http.Client
+}
+
+func (a *Asana) Connect(pat string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	tok := &oauth2.Token{AccessToken: pat}
 	conf := &oauth2.Config{}
-	client := conf.Client(ctx, tok)
-	return client
+	a.Client = conf.Client(ctx, tok)
 }
