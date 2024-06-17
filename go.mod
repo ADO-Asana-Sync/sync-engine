@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/uptrace/uptrace-go v1.26.2
-	go.mongodb.org/mongo-driver v1.14.0
+	go.mongodb.org/mongo-driver v1.15.1
 	go.opentelemetry.io/otel v1.26.0
 	go.opentelemetry.io/otel/trace v1.26.0
 	golang.org/x/net v0.25.0
