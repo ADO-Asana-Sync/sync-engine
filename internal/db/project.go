@@ -45,7 +45,21 @@ func (db *DB) AddProject(project Project) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
-	_, err := collection.InsertOne(ctx, project)
+
+	// Check if the project already exists
+	filter := bson.M{"ado_project_name": project.ADOProjectName, "ado_team_name": project.ADOTeamName, "asana_project_name": project.AsanaProjectName}
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("error checking for existing project: %v", err)
+	}
+
+	// If the project exists, return without inserting
+	if count > 0 {
+		return nil
+	}
+
+	// Insert the new project
+	_, err = collection.InsertOne(ctx, project)
 	if err != nil {
 		return fmt.Errorf("error inserting project: %v", err)
 	}
