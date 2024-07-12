@@ -50,6 +50,6 @@ require (
 require (
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/range-labs/go-asana v0.0.0-20220425181030-1627f841c4a7
-	golang.org/x/oauth2 v0.20.0
+	golang.org/x/oauth2 v0.21.0
 	golang.org/x/text v0.15.0 // indirect
 )
