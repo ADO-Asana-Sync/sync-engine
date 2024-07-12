@@ -38,3 +38,18 @@ func (db *DB) Projects() ([]Project, error) {
 	}
 	return projects, nil
 }
+
+// AddProject adds a new project to the database.
+// It takes a Project struct as input and returns an error, if any.
+func (db *DB) AddProject(project Project) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
+	_, err := collection.InsertOne(ctx, project)
+	if err != nil {
+		return fmt.Errorf("error inserting project: %v", err)
+	}
+	return nil
+}
+
+
