@@ -65,5 +65,3 @@ func (db *DB) AddProject(project Project) error {
 	}
 	return nil
 }
-
-

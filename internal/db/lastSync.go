@@ -1,9 +1,11 @@
 package db
 
 import (
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/net/context"
 )
 
@@ -29,4 +31,26 @@ func (db *DB) LastSync() LastSync {
 		lastSync.Time = time.Date(1980, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 	return lastSync
+}
+
+// WriteLastSync updates the last sync time in the database.
+func (db *DB) WriteLastSync(timestamp time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := db.Client.Database(DatabaseName).Collection(LastSyncCollection)
+
+	// Prepare the update operation
+	update := bson.M{"$set": bson.M{"time": timestamp}}
+
+	// Upsert option to insert if not exists
+	opts := options.Update().SetUpsert(true)
+
+	// Perform the update operation
+	_, err := collection.UpdateOne(ctx, bson.D{}, update, opts)
+	if err != nil {
+		return fmt.Errorf("error updating last sync time: %v", err)
+	}
+
+	return nil
 }
