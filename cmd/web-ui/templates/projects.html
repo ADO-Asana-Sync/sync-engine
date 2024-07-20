@@ -1,4 +1,5 @@
 {{ define "content" }}
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <h1>Projects</h1>
 {{ if .Error }}
 <div class="bg-pink-500 text-white text-center p-2 rounded mb-4">
@@ -12,11 +13,11 @@
 		<div class="bg-white p-4 rounded-lg shadow-md">
 			<div class="flex justify-between items-start relative">
 				<div class="flex space-x-2 absolute top-0 right-0">
-					<button class="edit-btn">
-						<img src="/static/icons/pencil.svg" alt="Edit" class="w-5 h-5">
+					<button class="edit-btn material-icons">
+						edit
 					</button>
-					<button class="delete-btn">
-						<img src="/static/icons/trashcan.svg" alt="Delete" class="w-5 h-5">
+					<button class="delete-btn material-icons">
+						delete
 					</button>
 				</div>
 				<h2 class="text-xl font-semibold mb-2">{{ .ADOProjectName }} / {{ .ADOTeamName }}</h2>
