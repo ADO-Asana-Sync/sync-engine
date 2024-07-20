@@ -18,7 +18,7 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./cmd/sync
+          path: ../cmd/sync
     # restart: unless-stopped
 
   web-ui:
@@ -37,13 +37,13 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./cmd/web-ui/static
+          path: ../cmd/web-ui/static
           target: /app/static
         - action: sync
-          path: ./cmd/web-ui/templates
-          target: /app/static
+          path: ../cmd/web-ui/templates
+          target: /app/templates
         - action: rebuild
-          path: ./cmd/web-ui
+          path: ../cmd/web-ui
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     # restart: unless-stopped
