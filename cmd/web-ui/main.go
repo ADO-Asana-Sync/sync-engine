@@ -67,6 +67,9 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		homeHandler(app, w, r)
 	})
+	mux.HandleFunc("/add-project", func(w http.ResponseWriter, r *http.Request) {
+		addProjectHandler(app, w, r)
+	})
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		faviconHandler(app, w, r)
 	})
@@ -173,10 +176,43 @@ func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
 		Title       string
 		CurrentPage string
 		Projects    []db.Project
+		Success     bool
+		Error       string
 	}{
 		Title:       "Projects",
 		CurrentPage: "projects",
 		Projects:    projects,
 	}
 	renderTemplate(w, "projects", data)
+}
+func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	adoProjectName := r.FormValue("ado_project_name")
+	adoTeamName := r.FormValue("ado_team_name")
+	asanaProjectName := r.FormValue("asana_project_name")
+	asanaWorkspaceName := r.FormValue("asana_workspace_name")
+
+	project := db.Project{
+		ADOProjectName:     adoProjectName,
+		ADOTeamName:        adoTeamName,
+		AsanaProjectName:   asanaProjectName,
+		AsanaWorkspaceName: asanaWorkspaceName,
+	}
+
+	err := app.DB.AddProject(project)
+	if err != nil {
+		renderTemplate(w, "projects", map[string]interface{}{
+			"Title":       "Projects",
+			"CurrentPage": "projects",
+			"Projects":    app.DB.Projects(),
+			"Error":       err.Error(),
+		})
+		return
+	}
+
+	http.Redirect(w, r, "/projects", http.StatusSeeOther)
 }
