@@ -19,6 +19,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	"sort"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -171,7 +172,12 @@ func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Render the template with the projects data
+	// Sort projects by ADOProjectName
+	sort.SliceStable(projects, func(i, j int) bool {
+		return projects[i].ADOProjectName < projects[j].ADOProjectName
+	})
+
+	// Render the template with the sorted projects data
 	data := struct {
 		Title       string
 		CurrentPage string
