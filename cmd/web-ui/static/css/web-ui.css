@@ -9,3 +9,26 @@ body {
 .sidebar a:hover {
 	background-color: #4a5568;
 }
+
+.sidebar a.active {
+	box-shadow: inset 2px 0 0 0 red;
+}
+
+p {
+	font-size: 16px;
+	color: #333;
+}
+
+h1 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #222;
+	margin-bottom: 0.5em;
+}
+
+h2 {
+	font-size: 1.5em;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 0.3em;
+}
