@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/context"
 )
 
@@ -15,9 +16,11 @@ var (
 
 // Project represents a project with its corresponding names in ADO and Asana.
 type Project struct {
-	ADOProjectName   string `json:"ado_project_name" bson:"ado_project_name"`
-	ADOTeamName      string `json:"ado_team_name" bson:"ado_team_name"`
-	AsanaProjectName string `json:"asana_project_name" bson:"asana_project_name"`
+	ID                 primitive.ObjectID `json:"id" bson:"_id"`
+	ADOProjectName     string             `json:"ado_project_name" bson:"ado_project_name"`
+	ADOTeamName        string             `json:"ado_team_name" bson:"ado_team_name"`
+	AsanaProjectName   string             `json:"asana_project_name" bson:"asana_project_name"`
+	AsanaWorkspaceName string             `json:"asana_workspace_name" bson:"asana_workspace_name"`
 }
 
 // Projects retrieves all projects from the database.
@@ -46,22 +49,55 @@ func (db *DB) AddProject(project Project) error {
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
-	// Check if the project already exists
-	filter := bson.M{"ado_project_name": project.ADOProjectName, "ado_team_name": project.ADOTeamName, "asana_project_name": project.AsanaProjectName}
+	// Check if the project already exists.
+	filter := bson.M{
+		"ado_project_name":     project.ADOProjectName,
+		"ado_team_name":        project.ADOTeamName,
+		"asana_project_name":   project.AsanaProjectName,
+		"asana_workspace_name": project.AsanaWorkspaceName,
+	}
 	count, err := collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("error checking for existing project: %v", err)
 	}
 
-	// If the project exists, return without inserting
+	// If the project exists, throw an error.
 	if count > 0 {
-		return nil
+		return fmt.Errorf("project already exists")
 	}
 
-	// Insert the new project
+	// Insert the new project.
 	_, err = collection.InsertOne(ctx, project)
 	if err != nil {
 		return fmt.Errorf("error inserting project: %v", err)
 	}
+	return nil
+}
+
+// RemoveProject removes a project from the database based on its ID.
+// It takes an ID string as input and returns an error, if any.
+func (db *DB) RemoveProject(id primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
+
+	// Convert the ID string to an ObjectID.
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("error converting ID to ObjectID: %v", err)
+	}
+
+	// Remove the project directly using the ID.
+	filter := bson.M{"_id": objectID}
+	result, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("error removing project: %v", err)
+	}
+
+	// Check if any project was deleted.
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("project does not exist")
+	}
+
 	return nil
 }
