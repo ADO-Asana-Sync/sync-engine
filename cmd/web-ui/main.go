@@ -159,7 +159,7 @@ func faviconHandler(app *App, w http.ResponseWriter, r *http.Request) {
 func homeHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "index", map[string]interface{}{
 		"Title":       "Dashboard",
-		"CurrentPage": "dashboard",
+		"CurrentPage": "home",
 	})
 }
 
