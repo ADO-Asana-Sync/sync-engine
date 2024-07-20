@@ -15,6 +15,7 @@ import (
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
