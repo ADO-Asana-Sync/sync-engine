@@ -81,14 +81,8 @@ func (db *DB) RemoveProject(id primitive.ObjectID) error {
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
-	// Convert the ID string to an ObjectID.
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("error converting ID to ObjectID: %v", err)
-	}
-
 	// Remove the project directly using the ID.
-	filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": id}
 	result, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("error removing project: %v", err)
