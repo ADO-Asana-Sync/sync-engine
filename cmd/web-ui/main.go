@@ -29,6 +29,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates := template.Must(template.ParseFiles(
 		filepath.Join("templates", "main.html"),
 		filepath.Join("templates", tmpl+".html"),
+		filepath.Join("templates", "projects.html"),
 	))
 
 	err := templates.ExecuteTemplate(w, "main", data)
@@ -53,3 +54,26 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 		"CurrentPage": "projects",
 	})
 }
+func projectsHandler(w http.ResponseWriter, r *http.Request) {
+	// Fetch projects from the database
+	projects, err := dbInstance.Projects()
+	if err != nil {
+		http.Error(w, "Unable to fetch projects", http.StatusInternalServerError)
+		return
+	}
+
+	// Render the template with the projects data
+	data := struct {
+		Title       string
+		CurrentPage string
+		Projects    []db.Project
+	}{
+		Title:       "Projects",
+		CurrentPage: "projects",
+		Projects:    projects,
+	}
+	renderTemplate(w, "projects", data)
+}
+
+func main() {
+	http.HandleFunc("/projects", projectsHandler)
