@@ -1,12 +1,51 @@
+# docker compose up --build --remove-orphans
+# docker compose up --watch --build --remove-orphans
 name: sync
 services:
   sync:
     image: ado-asana-sync_sync:latest
     build:
       context: ../
-      dockerfile: Dockerfile
+      dockerfile: cmd/sync/Dockerfile
     environment:
+      ADO_ORG_URL: ${ADO_ORG_URL}
+      ADO_PAT: ${ADO_PAT}
+      ASANA_PAT: ${ASANA_PAT}
       MONGO_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+      SLEEP_TIME: ${SLEEP_TIME}
+      UPTRACE_DSN: ${UPTRACE_DSN}
+      UPTRACE_ENVIRONMENT: ${UPTRACE_ENVIRONMENT}
+    develop:
+      watch:
+        - action: rebuild
+          path: ./cmd/sync
+    # restart: unless-stopped
+
+  web-ui:
+    image: ado-asana-sync_web-ui:latest
+    build:
+      context: ../
+      dockerfile: cmd/web-ui/Dockerfile
+    environment:
+      ADO_ORG_URL: ${ADO_ORG_URL}
+      ADO_PAT: ${ADO_PAT}
+      ASANA_PAT: ${ASANA_PAT}
+      MONGO_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+      SERVER_PORT: ${SERVER_PORT}
+      UPTRACE_DSN: ${UPTRACE_DSN}
+      UPTRACE_ENVIRONMENT: ${UPTRACE_ENVIRONMENT}
+    develop:
+      watch:
+        - action: sync
+          path: ./cmd/web-ui/static
+          target: /app/static
+        - action: sync
+          path: ./cmd/web-ui/templates
+          target: /app/static
+        - action: rebuild
+          path: ./cmd/web-ui
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
     # restart: unless-stopped
 
   mongo:
@@ -22,8 +61,6 @@ services:
 
   mongo-express:
     image: mongo-express:1-20
-    ports:
-      - 8081:8081
     environment:
       ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_ADMIN_PASSWORD}"
       ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_ADMIN_USERNAME}"
@@ -32,4 +69,6 @@ services:
       ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
       ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
+    ports:
+      - 8081:8081
     restart: unless-stopped
