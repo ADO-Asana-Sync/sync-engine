@@ -11,6 +11,14 @@ body {
 	margin-left: 8px;
 }
 
+.edit-btn {
+	color: green;
+}
+
+.delete-btn {
+	color: red;
+}
+
 
 .flex.space-x-2 {
 	margin-bottom: 8px;
