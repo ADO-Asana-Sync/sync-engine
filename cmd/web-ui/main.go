@@ -49,12 +49,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "projects", map[string]interface{}{
-		"Title":       "Projects",
-		"CurrentPage": "projects",
-	})
-}
-func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch projects from the database
 	projects, err := dbInstance.Projects()
 	if err != nil {
@@ -74,6 +68,3 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	renderTemplate(w, "projects", data)
 }
-
-func main() {
-	http.HandleFunc("/projects", projectsHandler)
