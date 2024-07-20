@@ -8,11 +8,16 @@ body {
 	background: none;
 	border: none;
 	cursor: pointer;
+	margin-right: 8px;
 }
 
 .edit-btn img, .delete-btn img {
 	width: 20px;
 	height: 20px;
+}
+
+.flex.space-x-2 {
+	margin-bottom: 8px;
 }
 
 .sidebar {
