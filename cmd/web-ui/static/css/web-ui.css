@@ -1,0 +1,11 @@
+body {
+	font-family: 'Roboto', sans-serif;
+}
+
+.sidebar:hover {
+	background-color: #2d3748;
+}
+
+.sidebar a:hover {
+	background-color: #4a5568;
+}

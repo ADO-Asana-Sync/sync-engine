@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Control Panel</title>
+	<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="/static/css/web-ui.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50">
+	<!-- Header -->
+	<header class="bg-indigo-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md">
+		<div class="container mx-auto flex justify-between items-center">
+			<a href="#" class="text-lg font-bold">WebApp Control Panel</a>
+			<nav>
+				<!-- Add navigation links if needed -->
+			</nav>
+		</div>
+	</header>
+	<!-- Page Content -->
+	<div class="flex flex-row min-h-screen pt-16">
+		<!-- Sidebar -->
+		<aside class="w-64 bg-gray-900 text-white fixed h-full shadow">
+			<ul>
+				<li class="sidebar"><a href="#" class="block p-4 hover:text-white">Dashboard</a></li>
+				<li class="sidebar"><a href="#" class="block p-4 hover:text-white">Projects</a></li>
+				<li class="sidebar"><a href="#" class="block p-4 hover:text-white">Logout</a></li>
+			</ul>
+		</aside>
+		<!-- Main Content -->
+		<div class="flex-1 p-10 text-2xl font-bold pl-72">
+			<h1>Hello, World!</h1>
+			<p>Welcome to our pretty index page.</p>
+		</div>
+	</div>
+</body>
+
+</html>
