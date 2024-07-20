@@ -17,7 +17,7 @@
 
 <body class="bg-gray-50">
 	<!-- Header -->
-	<header class="bg-indigo-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md">
+	<header class="bg-blue-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md">
 		<div class="container mx-auto flex justify-between items-center">
 			<a href="#" class="text-lg font-bold">ADO Asana Sync</a>
 			<nav>
@@ -28,7 +28,7 @@
 	<!-- Page Content -->
 	<div class="flex flex-row min-h-screen pt-16">
 		<!-- Sidebar -->
-		<aside class="w-64 bg-gray-900 text-white fixed h-full shadow">
+		<aside class="w-64 bg-gray-800 text-white fixed h-full shadow-lg">
 			<ul>
 				<li class="sidebar"><a href="/"
 						class="block p-4 {{if eq .CurrentPage `home`}}active{{else}}hover:text-white{{end}}">Dashboard</a>
@@ -40,7 +40,7 @@
 			</ul>
 		</aside>
 		<!-- Main Content -->
-		<div class="flex-1 p-10 text-2xl font-bold pl-72">
+		<div class="flex-1 p-10 text-xl font-medium pl-72 bg-white shadow-md rounded-lg">
 			{{ block "content" . }}{{ end }}
 		</div>
 	</div>
