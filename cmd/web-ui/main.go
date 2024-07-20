@@ -185,6 +185,7 @@ func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	}
 	renderTemplate(w, "projects", data)
 }
+
 func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -205,10 +206,16 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 
 	err := app.DB.AddProject(project)
 	if err != nil {
+		projects, err := app.DB.Projects()
+		if err != nil {
+			http.Error(w, "Unable to fetch projects", http.StatusInternalServerError)
+			return
+		}
+
 		renderTemplate(w, "projects", map[string]interface{}{
 			"Title":       "Projects",
 			"CurrentPage": "projects",
-			"Projects":    app.DB.Projects(),
+			"Projects":    projects,
 			"Error":       err.Error(),
 		})
 		return
