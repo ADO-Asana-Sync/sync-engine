@@ -11,8 +11,10 @@
 		{{ range .Projects }}
 		<div class="bg-white p-4 rounded-lg shadow-md">
 			<h2 class="text-xl font-semibold mb-2">{{ .ADOProjectName }} / {{ .ADOTeamName }}</h2>
-			<p class="text-gray-600">Asana Project: {{ .AsanaProjectName }}</p>
-			<p class="text-gray-600">Asana Workspace: {{ .AsanaWorkspaceName }}</p>
+			<p class="text-gray-600">ADO Project Name: {{ .ADOProjectName }}</p>
+			<p class="text-gray-600">ADO Team Name: {{ .ADOTeamName }}</p>
+			<p class="text-gray-600">Asana Project Name: {{ .AsanaProjectName }}</p>
+			<p class="text-gray-600">Asana Workspace Name: {{ .AsanaWorkspaceName }}</p>
 		</div>
 		{{ end }}
 	</div>
