@@ -198,6 +198,7 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	asanaWorkspaceName := r.FormValue("asana_workspace_name")
 
 	project := db.Project{
+		ID:                 primitive.NewObjectID(),
 		ADOProjectName:     adoProjectName,
 		ADOTeamName:        adoTeamName,
 		AsanaProjectName:   asanaProjectName,

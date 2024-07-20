@@ -66,7 +66,7 @@ func (db *DB) AddProject(project Project) error {
 		return fmt.Errorf("project already exists")
 	}
 
-	// Insert the new project.
+	// Insert the new project with a unique ID.
 	_, err = collection.InsertOne(ctx, project)
 	if err != nil {
 		return fmt.Errorf("error inserting project: %v", err)
