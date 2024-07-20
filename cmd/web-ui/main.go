@@ -144,7 +144,6 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates := template.Must(template.ParseFiles(
 		filepath.Join("templates", "main.html"),
 		filepath.Join("templates", tmpl+".html"),
-		filepath.Join("templates", "projects.html"),
 	))
 
 	err := templates.ExecuteTemplate(w, "main", data)
@@ -159,8 +158,8 @@ func faviconHandler(app *App, w http.ResponseWriter, r *http.Request) {
 
 func homeHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "index", map[string]interface{}{
-		"Title":       "Home",
-		"CurrentPage": "home",
+		"Title":       "Dashboard",
+		"CurrentPage": "dashboard",
 	})
 }
 
