@@ -71,3 +71,6 @@ h2 {
 #add-project-btn {
 	color: green;
 }
+#add-project-form input {
+	margin-bottom: 0;
+}
