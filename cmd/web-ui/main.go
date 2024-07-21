@@ -67,7 +67,9 @@ func main() {
 	// Register handlers.
 	registerRoutes(mux, app)
 
-	// Wrap the entire mux with otelhttp.NewHandler.
+	mux.HandleFunc("/delete-project", deleteProjectHandler)
+
+    // Wrap the entire mux with otelhttp.NewHandler.
 	handler := otelhttp.NewHandler(mux, "web-ui")
 
 	// Create a new http.Server instance with the wrapped handler.
@@ -135,6 +137,36 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	projectID := r.URL.Query().Get("id")
+	if projectID == "" {
+		http.Error(w, "Missing project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Convert projectID to ObjectID
+	objID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Delete the project from the database
+	collection := app.DB.Client.Database("your-database-name").Collection("projects")
+	_, err = collection.DeleteOne(r.Context(), bson.M{"_id": objID})
+	if err != nil {
+		http.Error(w, "Failed to delete project", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {

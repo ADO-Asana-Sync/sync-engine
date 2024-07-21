@@ -16,7 +16,7 @@
 					<button class="edit-btn material-icons">
 						edit
 					</button>
-					<button class="delete-btn material-icons">
+					<button class="delete-btn material-icons" data-id="{{.ID}}">
 						delete
 					</button>
 				</div>
@@ -60,5 +60,19 @@
 	document.getElementById('add-project-btn').addEventListener('click', function () {
 		document.getElementById('add-project-form').classList.toggle('hidden');
 	});
+document.querySelectorAll('.delete-btn').forEach(button => {
+    button.addEventListener('click', function () {
+        const projectId = this.getAttribute('data-id');
+        fetch(`/delete-project?id=${projectId}`, {
+            method: 'DELETE'
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to delete project');
+            }
+        });
+    });
+});
 </script>
 {{ end }}
