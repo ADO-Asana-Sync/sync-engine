@@ -65,7 +65,7 @@
 </div>
 <script>
 	document.getElementById('add-project-btn').addEventListener('click', function () {
-		document.getElementById('add-project-form-row').classList.remove('hidden');
+		document.getElementById('add-project-form-row').classList.toggle('hidden');
 	});
 	document.querySelectorAll('.delete-btn').forEach(button => {
 		button.addEventListener('click', function () {
