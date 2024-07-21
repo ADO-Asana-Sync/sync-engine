@@ -46,6 +46,7 @@ func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
 }
 
 func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -64,7 +65,7 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 		AsanaWorkspaceName: asanaWorkspaceName,
 	}
 
-	err := app.DB.AddProject(project)
+	err := app.DB.AddProject(ctx, project)
 	if err != nil {
 		appErr := fmt.Errorf("error adding project: %v", err)
 		data, err := fetchProjectsData(app)
@@ -78,4 +79,34 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/projects", http.StatusSeeOther)
+}
+
+func deleteProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	if r.Method != http.MethodDelete {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	projectID := r.URL.Query().Get("id")
+	if projectID == "" {
+		http.Error(w, "missing project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Convert projectID to ObjectID.
+	objID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		http.Error(w, "invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	// Delete the project from the database.
+	err = app.DB.RemoveProject(ctx, objID)
+	if err != nil {
+		http.Error(w, "failed to delete project", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

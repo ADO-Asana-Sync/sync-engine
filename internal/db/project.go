@@ -6,6 +6,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/net/context"
 )
 
@@ -44,8 +46,13 @@ func (db *DB) Projects() ([]Project, error) {
 
 // AddProject adds a new project to the database.
 // It takes a Project struct as input and returns an error, if any.
-func (db *DB) AddProject(project Project) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (db *DB) AddProject(ctx context.Context, project Project) error {
+	// Start a new span for the operation.
+	tracer := otel.GetTracerProvider().Tracer("")
+	ctx, span := tracer.Start(ctx, "web-ui.AddProject")
+	defer span.End()
+
+	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
@@ -56,41 +63,57 @@ func (db *DB) AddProject(project Project) error {
 		"asana_project_name":   project.AsanaProjectName,
 		"asana_workspace_name": project.AsanaWorkspaceName,
 	}
-	count, err := collection.CountDocuments(ctx, filter)
+	count, err := collection.CountDocuments(dbCtx, filter)
 	if err != nil {
-		return fmt.Errorf("error checking for existing project: %v", err)
+		err = fmt.Errorf("error checking for existing project: %v", err)
+		span.RecordError(err)
+		return err
 	}
 
 	// If the project exists, throw an error.
 	if count > 0 {
-		return fmt.Errorf("project already exists")
+		err = fmt.Errorf("project already exists")
+		span.RecordError(err)
+		return err
 	}
 
 	// Insert the new project with a unique ID.
-	_, err = collection.InsertOne(ctx, project)
+	_, err = collection.InsertOne(dbCtx, project)
 	if err != nil {
-		return fmt.Errorf("error inserting project: %v", err)
+		err = fmt.Errorf("error inserting project: %v", err)
+		span.RecordError(err)
+		return err
 	}
 	return nil
 }
 
 // RemoveProject removes a project from the database based on its ID.
-// It takes an ID string as input and returns an error, if any.
-func (db *DB) RemoveProject(id primitive.ObjectID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// It takes an ID ObjectID as input and returns an error, if any.
+func (db *DB) RemoveProject(ctx context.Context, id primitive.ObjectID) error {
+	// Start a new span for the operation.
+	tracer := otel.GetTracerProvider().Tracer("")
+	ctx, span := tracer.Start(ctx, "web-ui.RemoveProject")
+	defer span.End()
+
+	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
 	// Remove the project directly using the ID.
+	span.SetAttributes(attribute.String("project_id", id.String()))
 	filter := bson.M{"_id": id}
-	result, err := collection.DeleteOne(ctx, filter)
+	result, err := collection.DeleteOne(dbCtx, filter)
 	if err != nil {
-		return fmt.Errorf("error removing project: %v", err)
+		err = fmt.Errorf("error removing project: %v", err)
+		span.RecordError(err)
+		return err
 	}
 
 	// Check if any project was deleted.
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("project does not exist")
+		err = fmt.Errorf("project does not exist")
+		span.RecordError(err)
+		return err
 	}
 
 	return nil

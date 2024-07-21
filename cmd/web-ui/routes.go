@@ -25,4 +25,7 @@ func registerRoutes(mux *http.ServeMux, app *App) {
 	mux.HandleFunc("/add-project", func(w http.ResponseWriter, r *http.Request) {
 		addProjectHandler(app, w, r)
 	})
+	mux.HandleFunc("/delete-project", func(w http.ResponseWriter, r *http.Request) {
+		deleteProjectHandler(app, w, r)
+	})
 }
