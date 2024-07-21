@@ -4,6 +4,21 @@ body {
 	color: #333;
 }
 
+.add-btn {
+	background-color: green;
+	color: white;
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.add-btn .material-icons {
+	color: white;
+}
+
 .hidden {
 	display: none;
 }
