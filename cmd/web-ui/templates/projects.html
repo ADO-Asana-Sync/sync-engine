@@ -24,23 +24,27 @@
 			<tbody>
 				<tr id="add-project-form-row" class="hidden">
 					<td class="border px-4 py-2 text-right">
-						<input type="text" name="ado_project_name" class="w-full p-2 border border-gray-300 rounded"
-							placeholder="ADO Project Name" required>
+						<input type="text" name="ado_project_name"
+							class="w-full p-2 text-right border border-gray-300 rounded" placeholder="ADO Project Name"
+							required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="ado_team_name" class="w-full p-2 border border-gray-300 rounded"
-							placeholder="ADO Team Name" required>
+						<input type="text" name="ado_team_name"
+							class="w-full p-2 text-left border border-gray-300 rounded" placeholder="ADO Team Name"
+							required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="asana_workspace_name" class="w-full p-2 border border-gray-300 rounded"
+						<input type="text" name="asana_workspace_name"
+							class="w-full p-2 text-right border border-gray-300 rounded"
 							placeholder="Asana Workspace Name" required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="asana_project_name" class="w-full p-2 border border-gray-300 rounded"
-							placeholder="Asana Project Name" required>
+						<input type="text" name="asana_project_name"
+							class="w-full p-2 text-left border border-gray-300 rounded" placeholder="Asana Project Name"
+							required>
 					</td>
-					<td class="border px-4 py-2 text-right">
-						<button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Project</button>
+					<td class="border px-4 py-2 text-left">
+						<button type="submit" class="bg-blue-500 text-white p-2 rounded">Add</button>
 					</td>
 				</tr>
 				{{ range .Projects }}
