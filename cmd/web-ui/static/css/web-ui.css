@@ -74,7 +74,18 @@ h2 {
 }
 
 #add-project-btn {
-	color: green;
+	background-color: green;
+	color: white;
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#add-project-btn .material-icons {
+	color: white;
 }
 
 #add-project-form input {
