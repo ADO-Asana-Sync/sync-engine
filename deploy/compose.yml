@@ -38,18 +38,18 @@ services:
       UPTRACE_ENVIRONMENT: ${UPTRACE_ENVIRONMENT}
     develop:
       watch:
-        - action: sync
-          path: ../cmd/web-ui/static
-          target: /app/static
-        - action: sync
-          path: ../cmd/web-ui/templates
-          target: /app/templates
         - action: rebuild
           path: ../cmd/web-ui
+          ignore:
+            - templates
+            - static
         - action: rebuild
           path: ../internal
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
+    volumes:
+      - ../cmd/web-ui/static:/app/static
+      - ../cmd/web-ui/templates:/app/templates
     # restart: unless-stopped
 
   mongo:
