@@ -19,6 +19,8 @@ services:
       watch:
         - action: rebuild
           path: ../cmd/sync
+        - action: rebuild
+          path: ../internal
     # restart: unless-stopped
 
   web-ui:
@@ -44,6 +46,8 @@ services:
           target: /app/templates
         - action: rebuild
           path: ../cmd/web-ui
+        - action: rebuild
+          path: ../internal
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     # restart: unless-stopped
