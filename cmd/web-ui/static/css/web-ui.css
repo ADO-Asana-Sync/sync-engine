@@ -15,12 +15,31 @@ body {
 	margin-left: 8px;
 }
 
+.edit-btn, .delete-btn {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
 .edit-btn {
-	color: green;
+	background-color: green;
+	color: white;
+}
+
+.edit-btn .material-icons {
+	color: white;
 }
 
 .delete-btn {
-	color: red;
+	background-color: red;
+	color: white;
+}
+
+.delete-btn .material-icons {
+	color: white;
 }
 
 
