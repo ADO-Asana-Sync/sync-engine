@@ -17,6 +17,7 @@ body {
 
 .add-btn .material-icons {
 	color: white;
+	font-weight: bold;
 }
 
 .hidden {
@@ -125,6 +126,7 @@ h2 {
 
 #add-project-btn .material-icons {
 	color: white;
+	font-weight: bold;
 }
 
 #add-project-form input {
