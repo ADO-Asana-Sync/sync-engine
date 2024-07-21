@@ -85,7 +85,7 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Wrap the entire mux with otelhttp.NewHandler.
-	handler := otelhttp.NewHandler(mux, "myServer")
+	handler := otelhttp.NewHandler(mux, "web-ui")
 
 	// Create a new http.Server instance with the wrapped handler.
 	httpServer := &http.Server{
@@ -222,12 +222,13 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 
 	err := app.DB.AddProject(project)
 	if err != nil {
+		appErr := fmt.Errorf("error adding project: %v", err)
 		data, err := fetchProjectsData(app)
 		if err != nil {
 			http.Error(w, "unable to fetch projects after adding new project", http.StatusInternalServerError)
 			return
 		}
-		data.Error = err.Error()
+		data.Error = appErr.Error()
 		renderTemplate(w, "projects", data)
 		return
 	}
