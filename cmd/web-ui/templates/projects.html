@@ -10,55 +10,58 @@
 	<button id="add-project-btn" class="mt-4 bg-green-500 text-white p-2 rounded">
 		<span class="material-icons">add</span>
 	</button>
-	<table class="min-w-full bg-white mt-4">
-		<thead>
-			<tr id="add-project-form-row" class="hidden">
-				<form id="add-project-form" class="w-full" method="POST" action="/add-project">
+	<form id="add-project-form" class="w-full" method="POST" action="/add-project">
+		<table class="min-w-full bg-white mt-4">
+			<thead>
+				<tr>
+					<th class="py-2 px-4 text-right">ADO Project</th>
+					<th class="py-2 px-4 text-left">Team</th>
+					<th class="py-2 px-4 text-right">Asana Workspace</th>
+					<th class="py-2 px-4 text-left">Project</th>
+					<th class="py-2 px-4 text-left">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr id="add-project-form-row" class="hidden">
 					<td class="border px-4 py-2">
-						<input type="text" name="ado_project_name" class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
+						<input type="text" name="ado_project_name" class="w-full p-2 border border-gray-300 rounded"
+							placeholder="ADO Project Name" required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="ado_team_name" class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Team Name" required>
+						<input type="text" name="ado_team_name" class="w-full p-2 border border-gray-300 rounded"
+							placeholder="ADO Team Name" required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="asana_workspace_name" class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Workspace Name" required>
+						<input type="text" name="asana_workspace_name" class="w-full p-2 border border-gray-300 rounded"
+							placeholder="Asana Workspace Name" required>
 					</td>
 					<td class="border px-4 py-2">
-						<input type="text" name="asana_project_name" class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Project Name" required>
+						<input type="text" name="asana_project_name" class="w-full p-2 border border-gray-300 rounded"
+							placeholder="Asana Project Name" required>
 					</td>
 					<td class="border px-4 py-2 text-right">
 						<button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Project</button>
 					</td>
-				</form>
-			</tr>
-			</tr>
-			<tr>
-				<th class="py-2">ADO Project Name</th>
-				<th class="py-2">ADO Team Name</th>
-				<th class="py-2">Asana Workspace Name</th>
-				<th class="py-2">Asana Project Name</th>
-				<th class="py-2">Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-			{{ range .Projects }}
-			<tr>
-				<td class="border px-4 py-2">{{ .ADOProjectName }}</td>
-				<td class="border px-4 py-2">{{ .ADOTeamName }}</td>
-				<td class="border px-4 py-2">{{ .AsanaWorkspaceName }}</td>
-				<td class="border px-4 py-2">{{ .AsanaProjectName }}</td>
-				<td class="border px-4 py-2 text-right">
-					<button class="edit-btn material-icons">edit</button>
-					<button class="delete-btn material-icons" data-id="{{ .ID.Hex }}">delete</button>
-				</td>
-			</tr>
-			{{ end }}
-		</tbody>
-	</table>
+				</tr>
+				{{ range .Projects }}
+				<tr>
+					<td class="border px-4 py-2 text-right">{{ .ADOProjectName }}</td>
+					<td class="border px-4 py-2 text-left">{{ .ADOTeamName }}</td>
+					<td class="border px-4 py-2 text-right">{{ .AsanaWorkspaceName }}</td>
+					<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
+					<td class="border px-4 py-2 text-left">
+						<button class="edit-btn material-icons">edit</button>
+						<button class="delete-btn material-icons" data-id="{{ .ID.Hex }}">delete</button>
+					</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</form>
 </div>
 <script>
 	document.getElementById('add-project-btn').addEventListener('click', function () {
-		document.getElementById('add-project-form').classList.remove('hidden');
+		document.getElementById('add-project-form-row').classList.remove('hidden');
 	});
 	document.querySelectorAll('.delete-btn').forEach(button => {
 		button.addEventListener('click', function () {
