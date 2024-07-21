@@ -10,14 +10,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"sort"
-
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -67,22 +64,8 @@ func main() {
 	// Create a new ServeMux.
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		homeHandler(app, w, r)
-	})
-	mux.HandleFunc("/add-project", func(w http.ResponseWriter, r *http.Request) {
-		addProjectHandler(app, w, r)
-	})
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		faviconHandler(app, w, r)
-	})
-	mux.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
-		projectsHandler(app, w, r)
-	})
-
-	// Handler for static content
-	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// Register handlers.
+	registerRoutes(mux, app)
 
 	// Wrap the entire mux with otelhttp.NewHandler.
 	handler := otelhttp.NewHandler(mux, "web-ui")
@@ -154,84 +137,6 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	}
 }
 
-func faviconHandler(app *App, w http.ResponseWriter, r *http.Request) {
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join("static", "favicon.ico"))
-}
-
-func homeHandler(app *App, w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "index", map[string]interface{}{
-		"Title":       "Dashboard",
-		"CurrentPage": "home",
-	})
-}
-
-type ProjectsViewData struct {
-	Title       string
-	CurrentPage string
-	Projects    []db.Project
-	Error       string
-}
-
-func fetchProjectsData(app *App) (data ProjectsViewData, err error) {
-	projects, err := app.DB.Projects()
-	if err != nil {
-		return data, err
-	}
-
-	sort.SliceStable(projects, func(i, j int) bool {
-		return projects[i].ADOProjectName < projects[j].ADOProjectName
-	})
-
-	data = ProjectsViewData{
-		Title:       "Projects",
-		CurrentPage: "projects",
-		Projects:    projects,
-	}
-
-	return data, nil
-}
-
-func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
-	data, err := fetchProjectsData(app)
-	if err != nil {
-		http.Error(w, "Unable to fetch projects", http.StatusInternalServerError)
-		return
-	}
-
-	renderTemplate(w, "projects", data)
-}
-
-func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	adoProjectName := r.FormValue("ado_project_name")
-	adoTeamName := r.FormValue("ado_team_name")
-	asanaProjectName := r.FormValue("asana_project_name")
-	asanaWorkspaceName := r.FormValue("asana_workspace_name")
-
-	project := db.Project{
-		ID:                 primitive.NewObjectID(),
-		ADOProjectName:     adoProjectName,
-		ADOTeamName:        adoTeamName,
-		AsanaProjectName:   asanaProjectName,
-		AsanaWorkspaceName: asanaWorkspaceName,
-	}
-
-	err := app.DB.AddProject(project)
-	if err != nil {
-		appErr := fmt.Errorf("error adding project: %v", err)
-		data, err := fetchProjectsData(app)
-		if err != nil {
-			http.Error(w, "unable to fetch projects after adding new project", http.StatusInternalServerError)
-			return
-		}
-		data.Error = appErr.Error()
-		renderTemplate(w, "projects", data)
-		return
-	}
-
-	http.Redirect(w, r, "/projects", http.StatusSeeOther)
 }
