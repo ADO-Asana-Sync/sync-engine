@@ -12,8 +12,8 @@
 	</button>
 	<table class="min-w-full bg-white mt-4">
 		<thead>
-			<tr>
-				<form id="add-project-form" class="w-full hidden" method="POST" action="/add-project">
+			<tr id="add-project-form-row" class="hidden">
+				<form id="add-project-form" class="w-full" method="POST" action="/add-project">
 					<td class="border px-4 py-2">
 						<input type="text" name="ado_project_name" class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
 					</td>
@@ -30,6 +30,7 @@
 						<button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Project</button>
 					</td>
 				</form>
+			</tr>
 			</tr>
 			<tr>
 				<th class="py-2">ADO Project Name</th>
