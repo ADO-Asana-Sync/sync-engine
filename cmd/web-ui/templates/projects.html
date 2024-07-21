@@ -7,7 +7,6 @@
 </div>
 {{ end }}
 <div class="container mx-auto p-4">
-	<h1 class="text-2xl font-bold mb-4">Projects</h1>
 	<button id="add-project-btn" class="mt-4 bg-blue-500 text-white p-2 rounded">
 		<span class="material-icons">add</span>
 	</button>
@@ -16,8 +15,8 @@
 			<tr>
 				<th class="py-2">ADO Project Name</th>
 				<th class="py-2">ADO Team Name</th>
-				<th class="py-2">Asana Project Name</th>
 				<th class="py-2">Asana Workspace Name</th>
+				<th class="py-2">Asana Project Name</th>
 				<th class="py-2">Actions</th>
 			</tr>
 		</thead>
@@ -26,8 +25,8 @@
 			<tr>
 				<td class="border px-4 py-2">{{ .ADOProjectName }}</td>
 				<td class="border px-4 py-2">{{ .ADOTeamName }}</td>
-				<td class="border px-4 py-2">{{ .AsanaProjectName }}</td>
 				<td class="border px-4 py-2">{{ .AsanaWorkspaceName }}</td>
+				<td class="border px-4 py-2">{{ .AsanaProjectName }}</td>
 				<td class="border px-4 py-2 text-right">
 					<button class="edit-btn material-icons">edit</button>
 					<button class="delete-btn material-icons" data-id="{{ .ID.Hex }}">delete</button>
@@ -36,23 +35,24 @@
 			{{ end }}
 		</tbody>
 	</table>
-	<form id="add-project-form" class="mt-4 hidden bg-white p-4 rounded-lg shadow-md" method="POST" action="/add-project">
+	<form id="add-project-form" class="mt-4 hidden bg-white p-4 rounded-lg shadow-md" method="POST"
+		action="/add-project">
 		<div class="mb-4">
-			<label class="block text-gray-700">ADO Project Name</label>
+			<label for="ado_project_name" class="block text-gray-700">ADO Project Name</label>
 			<input type="text" name="ado_project_name" class="w-full p-2 border border-gray-300 rounded mt-1" required>
 		</div>
 		<div class="mb-4">
-			<label class="block text-gray-700">ADO Team Name</label>
+			<label for="ado_team_name" class="block text-gray-700">ADO Team Name</label>
 			<input type="text" name="ado_team_name" class="w-full p-2 border border-gray-300 rounded mt-1" required>
 		</div>
 		<div class="mb-4">
-			<label class="block text-gray-700">Asana Project Name</label>
-			<input type="text" name="asana_project_name" class="w-full p-2 border border-gray-300 rounded mt-1"
+			<label for="asana_workspace_name" class="block text-gray-700">Asana Workspace Name</label>
+			<input type="text" name="asana_workspace_name" class="w-full p-2 border border-gray-300 rounded mt-1"
 				required>
 		</div>
 		<div class="mb-4">
-			<label class="block text-gray-700">Asana Workspace Name</label>
-			<input type="text" name="asana_workspace_name" class="w-full p-2 border border-gray-300 rounded mt-1"
+			<label for="asana_project_name" class="block text-gray-700">Asana Project Name</label>
+			<input type="text" name="asana_project_name" class="w-full p-2 border border-gray-300 rounded mt-1"
 				required>
 		</div>
 		<button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Project</button>
