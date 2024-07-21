@@ -101,20 +101,6 @@ h2 {
 	margin-bottom: 0.3em;
 }
 
-#add-project-btn {
-	background-color: green;
-	color: white;
-	width: 40px;
-	height: 40px;
-	border-radius: 8px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-#add-project-btn .material-icons {
-	color: white;
-	font-weight: bold;
 }
 
 #add-project-form input {
