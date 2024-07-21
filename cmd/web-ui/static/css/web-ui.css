@@ -15,6 +15,11 @@ body {
 	margin-left: 8px;
 }
 
+.action-buttons {
+	display: flex;
+	gap: 4px;
+}
+
 .edit-btn, .delete-btn {
 	width: 40px;
 	height: 40px;
@@ -22,11 +27,6 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	margin-right: 4px;
-}
-
-.edit-btn:last-child, .delete-btn:last-child {
-	margin-right: 0;
 }
 
 .edit-btn {

@@ -50,12 +50,14 @@
 					<td class="border px-4 py-2 text-right">{{ .AsanaWorkspaceName }}</td>
 					<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
 					<td class="border px-4 py-2 text-left">
-						<button class="edit-btn">
-							<span class="material-icons">edit</span>
-						</button>
-						<button class="delete-btn" data-id="{{ .ID.Hex }}">
-							<span class="material-icons">delete</span>
-						</button>
+						<div class="action-buttons">
+							<button class="edit-btn">
+								<span class="material-icons">edit</span>
+							</button>
+							<button class="delete-btn" data-id="{{ .ID.Hex }}">
+								<span class="material-icons">delete</span>
+							</button>
+						</div>
 					</td>
 				</tr>
 				{{ end }}
