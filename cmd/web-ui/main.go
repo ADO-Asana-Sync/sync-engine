@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"sort"
+
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
@@ -19,7 +21,6 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"sort"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -164,31 +165,39 @@ func homeHandler(app *App, w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
-	// Fetch projects from the database
+type ProjectsViewData struct {
+	Title       string
+	CurrentPage string
+	Projects    []db.Project
+	Error       string
+}
+
+func fetchProjectsData(app *App) (data ProjectsViewData, err error) {
 	projects, err := app.DB.Projects()
+	if err != nil {
+		return data, err
+	}
+
+	sort.SliceStable(projects, func(i, j int) bool {
+		return projects[i].ADOProjectName < projects[j].ADOProjectName
+	})
+
+	data = ProjectsViewData{
+		Title:       "Projects",
+		CurrentPage: "projects",
+		Projects:    projects,
+	}
+
+	return data, nil
+}
+
+func projectsHandler(app *App, w http.ResponseWriter, r *http.Request) {
+	data, err := fetchProjectsData(app)
 	if err != nil {
 		http.Error(w, "Unable to fetch projects", http.StatusInternalServerError)
 		return
 	}
 
-	// Sort projects by ADOProjectName
-	sort.SliceStable(projects, func(i, j int) bool {
-		return projects[i].ADOProjectName < projects[j].ADOProjectName
-	})
-
-	// Render the template with the sorted projects data
-	data := struct {
-		Title       string
-		CurrentPage string
-		Projects    []db.Project
-		Success     bool
-		Error       string
-	}{
-		Title:       "Projects",
-		CurrentPage: "projects",
-		Projects:    projects,
-	}
 	renderTemplate(w, "projects", data)
 }
 
@@ -213,18 +222,13 @@ func addProjectHandler(app *App, w http.ResponseWriter, r *http.Request) {
 
 	err := app.DB.AddProject(project)
 	if err != nil {
-		projects, err := app.DB.Projects()
+		data, err := fetchProjectsData(app)
 		if err != nil {
-			http.Error(w, "Unable to fetch projects", http.StatusInternalServerError)
+			http.Error(w, "unable to fetch projects after adding new project", http.StatusInternalServerError)
 			return
 		}
-
-		renderTemplate(w, "projects", map[string]interface{}{
-			"Title":       "Projects",
-			"CurrentPage": "projects",
-			"Projects":    projects,
-			"Error":       err.Error(),
-		})
+		data.Error = err.Error()
+		renderTemplate(w, "projects", data)
 		return
 	}
 
