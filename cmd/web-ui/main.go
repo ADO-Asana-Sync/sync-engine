@@ -94,7 +94,7 @@ func (app *App) setup(ctx context.Context) error {
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
-	app.Tracer = otel.Tracer("")
+	app.Tracer = otel.Tracer("web-ui.main")
 
 	ctx, span := app.Tracer.Start(ctx, "web-ui.setup")
 	defer span.End()

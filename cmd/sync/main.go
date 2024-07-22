@@ -102,7 +102,7 @@ func (app *App) setup(ctx context.Context) error {
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
-	app.Tracer = otel.Tracer("")
+	app.Tracer = otel.Tracer("sync.main")
 
 	ctx, span := app.Tracer.Start(ctx, "sync.setup")
 	defer span.End()
