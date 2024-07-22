@@ -13,6 +13,16 @@
 			"envFile": [
 				"${workspaceFolder}/cmd/sync/.env"
 			],
+		},
+		{
+			"name": "Launch web-ui",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${workspaceFolder}/cmd/web-ui",
+			"envFile": [
+				"${workspaceFolder}/cmd/web-ui/.env"
+			],
 		}
 	]
 }

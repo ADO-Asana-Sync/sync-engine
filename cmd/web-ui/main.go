@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
@@ -12,8 +15,8 @@ import (
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -33,10 +36,15 @@ type App struct {
 }
 
 func main() {
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	log.Infof("Sync process started. Version: %v, commit: %v, date: %v", version, commit, date)
+	log.Infof("Web-ui process started. Version: %v, commit: %v, date: %v", version, commit, date)
 	app := &App{}
 	err := app.setup(ctx)
 	if err != nil {
@@ -53,41 +61,25 @@ func main() {
 		}
 	}(ctx)
 
-	// Create the worker pool.
-	numWorkers := 10 // Set the number of concurrent workers here or use an environment variable
-	taskCh := make(chan SyncTask)
+	// Create a new ServeMux.
+	mux := http.NewServeMux()
 
-	for i := 0; i < numWorkers; i++ {
-		go app.worker(ctx, i, taskCh)
+	// Register handlers.
+	registerRoutes(mux, app)
+
+	// Wrap the entire mux with otelhttp.NewHandler.
+	handler := otelhttp.NewHandler(mux, "web-ui")
+
+	// Create a new http.Server instance with the wrapped handler.
+	httpServer := &http.Server{
+		Addr:         ":" + port,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+		Handler:      handler,
 	}
-
-	// Create the controller.
-	var st time.Duration
-	for {
-		ctx, span := app.Tracer.Start(ctx, "sync.main")
-		app.controller(ctx, taskCh)
-
-		st = getSleepTime()
-		span.SetAttributes(attribute.Int64("sleepTimeSec", int64(st.Seconds())))
-		span.End()
-
-		log.Infof("sleeping for %v", st)
-		time.Sleep(st)
-	}
-}
-
-func getSleepTime() time.Duration {
-	sleepTime := os.Getenv("SLEEP_TIME")
-	if sleepTime == "" {
-		return 5 * time.Minute
-	}
-
-	d, err := time.ParseDuration(sleepTime)
-	if err != nil {
-		log.WithError(err).Warn("unable to parse SLEEP_TIME variable, defaulting to 5m")
-		return 5 * time.Minute
-	}
-	return d
+	log.Infof("listening on http://localhost:%v", port)
+	log.Fatal(httpServer.ListenAndServe())
 }
 
 func (app *App) setup(ctx context.Context) error {
@@ -96,15 +88,15 @@ func (app *App) setup(ctx context.Context) error {
 	dsn := os.Getenv("UPTRACE_DSN")
 	environment := os.Getenv("UPTRACE_ENVIRONMENT")
 	uptrace.ConfigureOpentelemetry(
-		uptrace.WithServiceName("sync-engine"),
+		uptrace.WithServiceName("web-ui"),
 		uptrace.WithDSN(dsn),
 		uptrace.WithServiceVersion(version),
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
-	app.Tracer = otel.Tracer("sync.main")
+	app.Tracer = otel.Tracer("web-ui.main")
 
-	ctx, span := app.Tracer.Start(ctx, "sync.setup")
+	ctx, span := app.Tracer.Start(ctx, "web-ui.setup")
 	defer span.End()
 
 	// Database setup.
@@ -131,4 +123,20 @@ func (app *App) setup(ctx context.Context) error {
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
 	return nil
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
+	templates := template.Must(template.ParseFiles(
+		filepath.Join("templates", "main.html"),
+		filepath.Join("templates", tmpl+".html"),
+	))
+
+	err := templates.ExecuteTemplate(w, "main", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, filepath.Join("static", "favicon.ico"))
 }

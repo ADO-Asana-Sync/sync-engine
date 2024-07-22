@@ -1,0 +1,105 @@
+body {
+	font-family: 'Roboto', sans-serif;
+	background-color: #bfbfcc;
+	color: #333;
+}
+
+.btn {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	cursor: pointer;
+	margin-left: 4px;
+}
+
+.btn .material-icons {
+	font-weight: bold;
+}
+
+.add-btn {
+	background-color: green;
+	color: white;
+}
+
+.create-btn {
+	background-color: green;
+	color: white;
+	margin: auto;
+}
+
+.hidden {
+	display: none;
+}
+
+.action-buttons {
+	display: flex;
+	gap: 4px;
+}
+
+
+.edit-btn {
+	background-color: dodgerblue;
+	color: white;
+}
+
+.delete-btn {
+	background-color: red;
+	color: white;
+}
+
+.flex.space-x-2 {
+	margin-bottom: 8px;
+	position: absolute;
+	top: 8px;
+	right: 8px;
+}
+
+.sidebar {
+	background-color: #1a202c;
+}
+
+.sidebar:hover {
+	background-color: #2d3748;
+}
+
+.sidebar a {
+	color: #a0aec0;
+}
+
+.sidebar a:hover {
+	background-color: #4a5568;
+	color: #edf2f7;
+}
+
+.sidebar a.active {
+	background-color: #2b6cb0;
+	color: #fff;
+	box-shadow: inset 2px 0 0 0 #2b6cb0;
+}
+
+p {
+	font-size: 16px;
+	color: #4a5568;
+}
+
+h1 {
+	font-size: 2.5em;
+	font-weight: bold;
+	color: #2b6cb0;
+	margin-bottom: 0.5em;
+}
+
+h2 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #2c5282;
+	margin-bottom: 0.3em;
+}
+
+#add-project-form input {
+	margin-bottom: 0;
+}

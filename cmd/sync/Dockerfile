@@ -20,5 +20,5 @@ WORKDIR /app
 COPY --from=builder /app/* ./
 USER sync
 ENV MONGO_URI=""
-CMD [ "./sync" ]
+ENTRYPOINT [ "./sync" ]
 EXPOSE 8080

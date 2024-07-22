@@ -1,0 +1,55 @@
+{{define "main"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ .Title }} | ADO Asana Sync Manager</title>
+	<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="/static/css/web-ui.css" rel="stylesheet">
+	<link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
+	<link rel="manifest" href="/static/site.webmanifest">
+</head>
+
+<body class="bg-gray-50">
+	<!-- Header -->
+	<header class="bg-blue-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md">
+		<div class="container flex justify-between items-center">
+			<div class="flex items-center ml-4">
+				<a href="/" class="flex items-center text-lg font-bold">
+					<img src="/static/img/favicon-32x32.png" alt="Logo" class="h-8 w-8 mr-4">
+					ADO Asana Sync Manager
+				</a>
+			</div>
+			<nav>
+				<!-- Add navigation links if needed -->
+			</nav>
+		</div>
+	</header>
+	<!-- Page Content -->
+	<div class="flex flex-row min-h-screen pt-16">
+		<!-- Sidebar -->
+		<aside class="w-64 bg-gray-800 text-white fixed h-full shadow-lg">
+			<ul>
+				<li class="sidebar"><a href="/"
+						class="block p-4 {{if eq .CurrentPage `home`}}active{{else}}hover:text-white{{end}}">Dashboard</a>
+				</li>
+				<li class="sidebar"><a href="/projects"
+						class="block p-4 {{if eq .CurrentPage `projects`}}active{{else}}hover:text-white{{end}}">Projects</a>
+				</li>
+				<li class="sidebar"><a href="/logout" class="block p-4 hover:text-white">Logout</a></li>
+			</ul>
+		</aside>
+		<!-- Main Content -->
+		<div class="flex-1 p-10 text-xl font-medium pl-72 bg-white shadow-md rounded-lg">
+			{{ block "content" . }}{{ end }}
+		</div>
+	</div>
+</body>
+
+</html>
+{{end}}
