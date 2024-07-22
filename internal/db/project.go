@@ -48,8 +48,8 @@ func (db *DB) Projects() ([]Project, error) {
 // It takes a Project struct as input and returns an error, if any.
 func (db *DB) AddProject(ctx context.Context, project Project) error {
 	// Start a new span for the operation.
-	tracer := otel.GetTracerProvider().Tracer("")
-	ctx, span := tracer.Start(ctx, "web-ui.AddProject")
+	tracer := otel.GetTracerProvider().Tracer("db")
+	ctx, span := tracer.Start(ctx, "db.AddProject")
 	defer span.End()
 
 	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -91,8 +91,8 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 // It takes an ID ObjectID as input and returns an error, if any.
 func (db *DB) RemoveProject(ctx context.Context, id primitive.ObjectID) error {
 	// Start a new span for the operation.
-	tracer := otel.GetTracerProvider().Tracer("")
-	ctx, span := tracer.Start(ctx, "web-ui.RemoveProject")
+	tracer := otel.GetTracerProvider().Tracer("db")
+	ctx, span := tracer.Start(ctx, "db.RemoveProject")
 	defer span.End()
 
 	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)

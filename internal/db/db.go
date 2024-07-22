@@ -27,7 +27,7 @@ type DB struct {
 }
 
 func (db *DB) Connect(ctx context.Context, uri string) error {
-	tracer := otel.GetTracerProvider().Tracer("")
+	tracer := otel.GetTracerProvider().Tracer("db")
 	_, span := tracer.Start(ctx, "db.Connect")
 	defer span.End()
 

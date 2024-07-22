@@ -22,7 +22,7 @@ type Azure struct {
 // It configures tracing and sets up the Azure DevOps client for further operations.
 func (a *Azure) Connect(ctx context.Context, orgUrl, pat string) {
 	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("")
+	tracer := otel.GetTracerProvider().Tracer("azure")
 	_, span := tracer.Start(ctx, "azure.Connect")
 	defer span.End()
 
@@ -37,7 +37,7 @@ func (a *Azure) Connect(ctx context.Context, orgUrl, pat string) {
 // https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.2&tabs=HTTP
 func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]workitemtracking.WorkItemReference, error) {
 	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("")
+	tracer := otel.GetTracerProvider().Tracer("azure")
 	_, span := tracer.Start(ctx, "azure.GetChangedWorkItems")
 	defer span.End()
 
@@ -79,7 +79,7 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 // The function uses the provided context for cancellation or timeout.
 func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, error) {
 	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("")
+	tracer := otel.GetTracerProvider().Tracer("azure")
 	ctx, span := tracer.Start(ctx, "azure.GetProjects")
 	defer span.End()
 

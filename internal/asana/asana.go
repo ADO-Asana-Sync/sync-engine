@@ -14,7 +14,7 @@ type Asana struct {
 }
 
 func (a *Asana) Connect(ctx context.Context, pat string) {
-	tracer := otel.GetTracerProvider().Tracer("")
+	tracer := otel.GetTracerProvider().Tracer("asana")
 	_, span := tracer.Start(ctx, "asana.Connect")
 	defer span.End()
 
