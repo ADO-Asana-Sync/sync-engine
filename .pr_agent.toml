@@ -11,7 +11,7 @@ description = """Adds or modifies tests"""
 description = """Adds new features or modifies existing ones"""
 [custom_labels."🧾 documentation"]
 description = """Adds or modifies documentation"""
-[custom_labels."🎬 github_actions"]
+[custom_labels."🛠️ github_actions"]
 description = """Adds or modifies GitHub Actions"""
 [custom_labels."⬆️ dependencies"]
 description = """Modifications of the project dependencies"""
