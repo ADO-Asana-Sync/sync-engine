@@ -14,5 +14,8 @@
 		"wlog",
 		"workitems",
 		"workitemtracking"
+	],
+	"git.branchProtection": [
+		"main"
 	]
 }

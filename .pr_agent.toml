@@ -1,0 +1,23 @@
+[config]
+enable_custom_labels = true
+
+[custom_labels."🐛 bug"]
+description = """Fixes a bug in the code"""
+[custom_labels."📄 configuration changes"]
+description = """Changes to configuration files"""
+[custom_labels."🧪 tests"]
+description = """Adds or modifies tests"""
+[custom_labels."✨ enhancement"]
+description = """Adds new features or modifies existing ones"""
+[custom_labels."🧾 documentation"]
+description = """Adds or modifies documentation"""
+[custom_labels."🎬 github_actions"]
+description = """Adds or modifies GitHub Actions"""
+[custom_labels."⬆️ dependencies"]
+description = """Modifications of the project dependencies"""
+[custom_labels."🔄️ sync"]
+description = """Additions or modifications to the synchronization code"""
+[custom_labels."💽 database"]
+description = """Additions or modifications to the database code"""
+[custom_labels."🌐 web-ui"]
+description = """Additions or modifications to the web-ui code"""
