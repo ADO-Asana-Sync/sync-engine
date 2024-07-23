@@ -15,7 +15,7 @@ description = """Adds or modifies documentation"""
 description = """Adds or modifies GitHub Actions"""
 [custom_labels."⬆️ dependencies"]
 description = """Modifications of the project dependencies"""
-[custom_labels."🔄️ sync"]
+[custom_labels."🔁 sync"]
 description = """Additions or modifications to the synchronization code"""
 [custom_labels."💽 database"]
 description = """Additions or modifications to the database code"""
