@@ -17,5 +17,7 @@
 	],
 	"git.branchProtection": [
 		"main"
-	]
+	],
+	"githubIssues.issueBranchTitle": "user/${user}/issue${issueNumber}-${sanitizedIssueTitle}",
+	"git.branchRandomName.enable": true
 }
