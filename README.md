@@ -30,3 +30,7 @@ Projects should follow the folder structure from this standard project layout: [
 ## Commit message style
 
 This repo uses [Conventional Commits](https://www.conventionalcommits.org/) to ensure the build numbering is generated correctly
+
+## Issue Tracking
+
+Issues for this project are tracked using Plane. You can view and manage issues at the following link: [Plane Issues](https://app.plane.so/ado-asana-sync/projects/0550b4ee-67c4-44ed-a4ab-03c08cbfaf67/issues/)
