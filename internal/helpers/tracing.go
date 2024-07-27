@@ -13,7 +13,7 @@ import (
 func GetTracerFromContext(ctx context.Context) trace.Tracer {
 	tracer, ok := ctx.Value("tracer").(trace.Tracer)
 	if !ok {
-		tracer = otel.Tracer("")
+		tracer = otel.Tracer("defaultTracer")
 	}
 	return tracer
 }
