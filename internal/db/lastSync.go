@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/net/context"
@@ -20,8 +21,11 @@ type LastSync struct {
 }
 
 // LastSync retrieves the last sync time.
-func (db *DB) LastSync() LastSync {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (db *DB) LastSync(ctx context.Context) LastSync {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.LastSync")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	var lastSync LastSync
@@ -34,8 +38,11 @@ func (db *DB) LastSync() LastSync {
 }
 
 // WriteLastSync updates the last sync time in the database.
-func (db *DB) WriteLastSync(timestamp time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (db *DB) WriteLastSync(ctx context.Context, timestamp time.Time) error {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.LastSync")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	collection := db.Client.Database(DatabaseName).Collection(LastSyncCollection)

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -27,14 +27,13 @@ type DB struct {
 }
 
 func (db *DB) Connect(ctx context.Context, uri string) error {
-	tracer := otel.GetTracerProvider().Tracer("db")
-	_, span := tracer.Start(ctx, "db.Connect")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.Connect")
 	defer span.End()
 
-	dbCtx, cancel := context.WithTimeout(ctx, ConnectionTimeout)
+	ctx, cancel := context.WithTimeout(ctx, ConnectionTimeout)
 	defer cancel()
 
-	c, err := mongo.Connect(dbCtx, options.Client().ApplyURI(uri))
+	c, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -42,7 +41,7 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 	}
 	db.Client = c
 
-	err = db.Client.Ping(dbCtx, nil)
+	err = db.Client.Ping(ctx, nil)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())

@@ -11,7 +11,7 @@ import (
 
 func (app *App) controller(ctx context.Context, syncTasks chan<- SyncTask) {
 	// Configure the tracing.
-	_, span := app.Tracer.Start(ctx, "sync.controller")
+	ctx, span := app.Tracer.Start(ctx, "sync.controller")
 	defer span.End()
 
 	log.Info("controller started")
@@ -35,7 +35,7 @@ func (app *App) controller(ctx context.Context, syncTasks chan<- SyncTask) {
 	// }
 
 	// List all ADO projects
-	lastSync := app.DB.LastSync()
+	lastSync := app.DB.LastSync(ctx)
 	log.WithField("lastSyncTime", lastSync.Time).Info("get items modified since last sync")
 	tasks, err := app.Azure.GetChangedWorkItems(ctx, lastSync.Time)
 	if err != nil {

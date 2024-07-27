@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel"
+	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
+
 	"golang.org/x/oauth2"
 )
 
@@ -14,14 +15,13 @@ type Asana struct {
 }
 
 func (a *Asana) Connect(ctx context.Context, pat string) {
-	tracer := otel.GetTracerProvider().Tracer("asana")
-	_, span := tracer.Start(ctx, "asana.Connect")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.Connect")
 	defer span.End()
 
-	asanaCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	tok := &oauth2.Token{AccessToken: pat}
 	conf := &oauth2.Config{}
-	a.Client = conf.Client(asanaCtx, tok)
+	a.Client = conf.Client(ctx, tok)
 }

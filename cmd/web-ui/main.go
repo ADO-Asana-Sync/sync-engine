@@ -25,6 +25,8 @@ var (
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"
+
+	serviceName = "web-ui"
 )
 
 type App struct {
@@ -88,13 +90,13 @@ func (app *App) setup(ctx context.Context) error {
 	dsn := os.Getenv("UPTRACE_DSN")
 	environment := os.Getenv("UPTRACE_ENVIRONMENT")
 	uptrace.ConfigureOpentelemetry(
-		uptrace.WithServiceName("web-ui"),
+		uptrace.WithServiceName(serviceName),
 		uptrace.WithDSN(dsn),
 		uptrace.WithServiceVersion(version),
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
-	app.Tracer = otel.Tracer("web-ui.main")
+	app.Tracer = otel.Tracer("web-ui")
 
 	ctx, span := app.Tracer.Start(ctx, "web-ui.setup")
 	defer span.End()

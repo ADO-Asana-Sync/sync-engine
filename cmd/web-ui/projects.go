@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sort"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ProjectsViewData struct {
@@ -16,9 +18,13 @@ type ProjectsViewData struct {
 	Error       string
 }
 
-func fetchProjectsData(app *App) (data ProjectsViewData, err error) {
-	projects, err := app.DB.Projects()
+func fetchProjectsData(ctx context.Context, app *App) (data ProjectsViewData, err error) {
+	ctx, span := app.Tracer.Start(ctx, "projects.fetchProjectsData")
+	defer span.End()
+
+	projects, err := app.DB.Projects(ctx)
 	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
 		return data, err
 	}
 
@@ -31,7 +37,7 @@ func fetchProjectsData(app *App) (data ProjectsViewData, err error) {
 		CurrentPage: "projects",
 		Projects:    projects,
 	}
-
+	span.AddEvent(fmt.Sprintf("%v projects fetched", len(projects)))
 	return data, nil
 }
 
