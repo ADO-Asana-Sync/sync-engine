@@ -122,7 +122,7 @@ func loadTemplates(ctx context.Context, app *App) multitemplate.Render {
 	_, span := app.Tracer.Start(ctx, "web-ui.loadTemplates")
 	defer span.End()
 
-	templates := multitemplate.New()
+	r := multitemplate.New()
 
 	// Read all files in the templates folder.
 	files, err := os.ReadDir("templates")
@@ -130,8 +130,6 @@ func loadTemplates(ctx context.Context, app *App) multitemplate.Render {
 		span.RecordError(err, trace.WithStackTrace(true))
 		log.Fatalf("Failed to read templates directory: %v", err)
 	}
-
-	span.AddEvent(fmt.Sprintf("Found %v files in the templates directory", len(files)))
 
 	// Iterate over each file in the templates folder.
 	for _, file := range files {
@@ -144,11 +142,12 @@ func loadTemplates(ctx context.Context, app *App) multitemplate.Render {
 		templateName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 
 		// Add the template using main.html and the current file.
-		templates.AddFromFiles(templateName,
+		r.AddFromFiles(templateName,
 			filepath.Join("templates", "main.html"),
 			filepath.Join("templates", file.Name()),
 		)
+		span.AddEvent(fmt.Sprintf("Added template: %v", templateName))
 	}
 
-	return templates
+	return r
 }
