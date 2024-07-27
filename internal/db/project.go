@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/net/context"
 )
@@ -27,8 +27,11 @@ type Project struct {
 
 // Projects retrieves all projects from the database.
 // It returns a slice of Project structs and an error, if any.
-func (db *DB) Projects() ([]Project, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (db *DB) Projects(ctx context.Context) ([]Project, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.Projects")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	var projects []Project
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
@@ -47,9 +50,7 @@ func (db *DB) Projects() ([]Project, error) {
 // AddProject adds a new project to the database.
 // It takes a Project struct as input and returns an error, if any.
 func (db *DB) AddProject(ctx context.Context, project Project) error {
-	// Start a new span for the operation.
-	tracer := otel.GetTracerProvider().Tracer("db")
-	ctx, span := tracer.Start(ctx, "db.AddProject")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.AddProject")
 	defer span.End()
 
 	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -90,9 +91,7 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 // RemoveProject removes a project from the database based on its ID.
 // It takes an ID ObjectID as input and returns an error, if any.
 func (db *DB) RemoveProject(ctx context.Context, id primitive.ObjectID) error {
-	// Start a new span for the operation.
-	tracer := otel.GetTracerProvider().Tracer("db")
-	ctx, span := tracer.Start(ctx, "db.RemoveProject")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.RemoveProject")
 	defer span.End()
 
 	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -112,6 +111,37 @@ func (db *DB) RemoveProject(ctx context.Context, id primitive.ObjectID) error {
 	// Check if any project was deleted.
 	if result.DeletedCount == 0 {
 		err = fmt.Errorf("project does not exist")
+		span.RecordError(err)
+		return err
+	}
+
+	return nil
+}
+
+// UpdateProject updates an existing project in the database.
+// It takes a Project struct as input and returns an error, if any.
+func (db *DB) UpdateProject(ctx context.Context, project Project) error {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.UpdateProject")
+	defer span.End()
+
+	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
+
+	// Update the project using the ID.
+	span.SetAttributes(attribute.String("project_id", project.ID.String()))
+	filter := bson.M{"_id": project.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"ado_project_name":     project.ADOProjectName,
+			"ado_team_name":        project.ADOTeamName,
+			"asana_project_name":   project.AsanaProjectName,
+			"asana_workspace_name": project.AsanaWorkspaceName,
+		},
+	}
+	_, err := collection.UpdateOne(dbCtx, filter, update)
+	if err != nil {
+		err = fmt.Errorf("error updating project: %v", err)
 		span.RecordError(err)
 		return err
 	}

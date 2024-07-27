@@ -1,9 +1,13 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "index", map[string]interface{}{
+	"github.com/gin-gonic/gin"
+)
+
+func homeHandler(c *gin.Context) {
+	c.HTML(http.StatusOK, "index", gin.H{
 		"Title":       "Dashboard",
 		"CurrentPage": "home",
 	})

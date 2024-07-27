@@ -19,9 +19,9 @@ import (
 )
 
 var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
 )
 
 type App struct {
@@ -36,7 +36,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	log.Infof("Sync process started. Version: %v, commit: %v, date: %v", version, commit, date)
+	log.Infof("Sync process started. Version: %v, commit: %v, date: %v", Version, Commit, Date)
 	app := &App{}
 	err := app.setup(ctx)
 	if err != nil {
@@ -98,7 +98,7 @@ func (app *App) setup(ctx context.Context) error {
 	uptrace.ConfigureOpentelemetry(
 		uptrace.WithServiceName("sync-engine"),
 		uptrace.WithDSN(dsn),
-		uptrace.WithServiceVersion(version),
+		uptrace.WithServiceVersion(Version),
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown

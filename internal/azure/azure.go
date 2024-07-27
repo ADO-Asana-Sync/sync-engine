@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/core"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/workitemtracking"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -21,9 +21,7 @@ type Azure struct {
 // Connect establishes a connection to Azure DevOps using the provided organization URL and personal access token (PAT).
 // It configures tracing and sets up the Azure DevOps client for further operations.
 func (a *Azure) Connect(ctx context.Context, orgUrl, pat string) {
-	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("azure")
-	_, span := tracer.Start(ctx, "azure.Connect")
+	_, span := helpers.StartSpanOnTracerFromContext(ctx, "azure.Connect")
 	defer span.End()
 
 	clt := azuredevops.NewPatConnection(orgUrl, pat)
@@ -36,9 +34,7 @@ func (a *Azure) Connect(ctx context.Context, orgUrl, pat string) {
 // https://github.com/microsoft/azure-devops-go-api/blob/dev/azuredevops/workitemtracking/client.go#L2676
 // https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/wiql/query-by-wiql?view=azure-devops-rest-7.2&tabs=HTTP
 func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]workitemtracking.WorkItemReference, error) {
-	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("azure")
-	_, span := tracer.Start(ctx, "azure.GetChangedWorkItems")
+	_, span := helpers.StartSpanOnTracerFromContext(ctx, "azure.GetChangedWorkItems")
 	defer span.End()
 
 	var tasks []workitemtracking.WorkItemReference
@@ -67,9 +63,7 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 		return tasks, err
 	}
 
-	for _, item := range *(*responseValue).WorkItems {
-		tasks = append(tasks, item)
-	}
+	tasks = append(tasks, *(*responseValue).WorkItems...)
 
 	return tasks, nil
 }
@@ -78,9 +72,7 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 // It returns a slice of core.TeamProjectReference and an error if any.
 // The function uses the provided context for cancellation or timeout.
 func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, error) {
-	// Configure the tracing.
-	tracer := otel.GetTracerProvider().Tracer("azure")
-	ctx, span := tracer.Start(ctx, "azure.GetProjects")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "azure.GetProjects")
 	defer span.End()
 
 	var projects []core.TeamProjectReference

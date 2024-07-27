@@ -1,31 +1,33 @@
 package main
 
 import (
-	"net/http"
-	"path/filepath"
+	"github.com/gin-gonic/gin"
 )
 
-func registerRoutes(mux *http.ServeMux, app *App) {
+func registerRoutes(router *gin.Engine, app *App) {
 	// Handlers for shared content.
-	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		faviconHandler(w, r)
-	})
+	router.Static("/static", "./static")
+	router.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 
 	// Dashboard routes.
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		homeHandler(w, r)
+	router.GET("/", homeHandler)
+
+	// Healthcheck route.
+	router.GET("/health", func(c *gin.Context) {
+		healthcheckHandler(app, c)
 	})
 
 	// Projects routes.
-	mux.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
-		projectsHandler(app, w, r)
+	router.GET("/projects", func(c *gin.Context) {
+		projectsHandler(app, c)
 	})
-	mux.HandleFunc("/add-project", func(w http.ResponseWriter, r *http.Request) {
-		addProjectHandler(app, w, r)
+	router.POST("/add-project", func(c *gin.Context) {
+		addProjectHandler(app, c)
 	})
-	mux.HandleFunc("/delete-project", func(w http.ResponseWriter, r *http.Request) {
-		deleteProjectHandler(app, w, r)
+	router.DELETE("/delete-project", func(c *gin.Context) {
+		deleteProjectHandler(app, c)
+	})
+	router.POST("/update-project", func(c *gin.Context) {
+		editProjectHandler(app, c)
 	})
 }

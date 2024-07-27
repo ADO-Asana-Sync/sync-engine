@@ -3,28 +3,30 @@ package main
 import (
 	"context"
 	"fmt"
-	"html/template"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"time"
+	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
+	"github.com/gin-gonic/contrib/renders/multitemplate"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
 var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
+
+	serviceName = "web-ui"
 )
 
 type App struct {
@@ -44,7 +46,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	log.Infof("Web-ui process started. Version: %v, commit: %v, date: %v", version, commit, date)
+	log.Infof("Web-ui process started. Version: %v, commit: %v, date: %v", Version, Commit, Date)
 	app := &App{}
 	err := app.setup(ctx)
 	if err != nil {
@@ -61,25 +63,16 @@ func main() {
 		}
 	}(ctx)
 
-	// Create a new ServeMux.
-	mux := http.NewServeMux()
+	router := gin.Default()
+	router.Use(otelgin.Middleware(serviceName))
+	router.HTMLRender = loadTemplates(ctx, app)
+	registerRoutes(router, app)
 
-	// Register handlers.
-	registerRoutes(mux, app)
-
-	// Wrap the entire mux with otelhttp.NewHandler.
-	handler := otelhttp.NewHandler(mux, "web-ui")
-
-	// Create a new http.Server instance with the wrapped handler.
-	httpServer := &http.Server{
-		Addr:         ":" + port,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
-		Handler:      handler,
-	}
 	log.Infof("listening on http://localhost:%v", port)
-	log.Fatal(httpServer.ListenAndServe())
+	listenAddress := fmt.Sprintf(":%v", port)
+	if err := router.Run(listenAddress); err != nil {
+		log.WithError(err).Fatal("error running the router")
+	}
 }
 
 func (app *App) setup(ctx context.Context) error {
@@ -88,13 +81,13 @@ func (app *App) setup(ctx context.Context) error {
 	dsn := os.Getenv("UPTRACE_DSN")
 	environment := os.Getenv("UPTRACE_ENVIRONMENT")
 	uptrace.ConfigureOpentelemetry(
-		uptrace.WithServiceName("web-ui"),
+		uptrace.WithServiceName(serviceName),
 		uptrace.WithDSN(dsn),
-		uptrace.WithServiceVersion(version),
+		uptrace.WithServiceVersion(Version),
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
-	app.Tracer = otel.Tracer("web-ui.main")
+	app.Tracer = otel.Tracer("web-ui")
 
 	ctx, span := app.Tracer.Start(ctx, "web-ui.setup")
 	defer span.End()
@@ -125,18 +118,36 @@ func (app *App) setup(ctx context.Context) error {
 	return nil
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
-	templates := template.Must(template.ParseFiles(
-		filepath.Join("templates", "main.html"),
-		filepath.Join("templates", tmpl+".html"),
-	))
+func loadTemplates(ctx context.Context, app *App) multitemplate.Render {
+	_, span := app.Tracer.Start(ctx, "web-ui.loadTemplates")
+	defer span.End()
 
-	err := templates.ExecuteTemplate(w, "main", data)
+	r := multitemplate.New()
+
+	// Read all files in the templates folder.
+	files, err := os.ReadDir("templates")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		span.RecordError(err, trace.WithStackTrace(true))
+		log.Fatalf("Failed to read templates directory: %v", err)
 	}
-}
 
-func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join("static", "favicon.ico"))
+	// Iterate over each file in the templates folder.
+	for _, file := range files {
+		// Skip directories and the main.html file.
+		if file.IsDir() || file.Name() == "main.html" {
+			continue
+		}
+
+		// Get the file name without the extension to use as the template name.
+		templateName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+
+		// Add the template using main.html and the current file.
+		r.AddFromFiles(templateName,
+			filepath.Join("templates", "main.html"),
+			filepath.Join("templates", file.Name()),
+		)
+		span.AddEvent(fmt.Sprintf("Added template: %v", templateName))
+	}
+
+	return r
 }

@@ -10,71 +10,118 @@
 	<button type="button" id="add-project-btn" class="btn create-btn" title="Add Project">
 		<span class="material-icons">add</span>
 	</button>
-	<form id="add-project-form" class="w-full" method="POST" action="/add-project">
-		<table class="min-w-full bg-white mt-4">
-			<thead>
-				<tr>
-					<th class="py-2 px-4 text-right">ADO Project</th>
-					<th class="py-2 px-4 text-left">Team</th>
-					<th class="py-2 px-4 text-right">Asana Workspace</th>
-					<th class="py-2 px-4 text-left">Project</th>
-					<th class="py-2 px-4 text-left">Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr id="add-project-form-row" class="hidden">
-					<td class="border px-4 py-2 text-right">
-						<input type="text" name="ado_project_name"
-							class="w-full p-2 text-right border border-gray-300 rounded" placeholder="ADO Project Name"
-							required>
-					</td>
-					<td class="border px-4 py-2 text-center">
-						<input type="text" name="ado_team_name"
-							class="w-full p-2 text-left border border-gray-300 rounded" placeholder="ADO Team Name"
-							required>
-					</td>
-					<td class="border px-4 py-2 text-center">
-						<input type="text" name="asana_workspace_name"
-							class="w-full p-2 text-right border border-gray-300 rounded"
-							placeholder="Asana Workspace Name" required>
-					</td>
-					<td class="border px-4 py-2">
-						<input type="text" name="asana_project_name"
-							class="w-full p-2 text-left border border-gray-300 rounded" placeholder="Asana Project Name"
-							required>
-					</td>
-					<td class="border px-4 py-2">
+	<table class="min-w-full bg-white mt-4">
+		<thead>
+			<tr>
+				<th class="py-2 px-4 text-right">ADO Project</th>
+				<th class="py-2 px-4 text-left">Team</th>
+				<th class="py-2 px-4 text-right">Asana Workspace</th>
+				<th class="py-2 px-4 text-left">Project</th>
+				<th class="py-2 px-4 text-left">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- Add Project Form Row -->
+			<tr id="add-project-form-row" class="hidden">
+				<td class="border px-4 py-2 text-right">
+					<input type="text" name="ado_project_name" form="add-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<input type="text" name="ado_team_name" form="add-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Team Name" required>
+				</td>
+				<td class="border px-4 py-2 text-right">
+					<input type="text" name="asana_workspace_name" form="add-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Workspace Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<input type="text" name="asana_project_name" form="add-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Project Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<form id="add-project-form" method="POST" action="/add-project">
 						<button type="submit" class="btn add-btn" title="Add Project">
 							<span class="material-icons">check</span>
 						</button>
-					</td>
-				</tr>
-				{{ range .Projects }}
-				<tr>
-					<td class="border px-4 py-2 text-right">{{ .ADOProjectName }}</td>
-					<td class="border px-4 py-2 text-left">{{ .ADOTeamName }}</td>
-					<td class="border px-4 py-2 text-right">{{ .AsanaWorkspaceName }}</td>
-					<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
-					<td class="border px-4 py-2 text-left">
-						<div class="action-buttons">
-							<button type="button" class="btn edit-btn" title="Edit Project">
-								<span class="material-icons">edit</span>
-							</button>
-							<button type="button" class="btn delete-btn" data-id="{{ .ID.Hex }}" title="Delete Project">
-								<span class="material-icons">delete</span>
-							</button>
-						</div>
-					</td>
-				</tr>
-				{{ end }}
-			</tbody>
-		</table>
-	</form>
+					</form>
+				</td>
+			</tr>
+			<!-- Update Project Form Row -->
+			<tr id="update-project-form-row" class="hidden">
+				<td class="border px-4 py-2 text-right">
+					<input type="text" name="ado_project_name" id="update-ado-project-name" form="update-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<input type="text" name="ado_team_name" id="update-ado-team-name" form="update-project-form"
+						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Team Name" required>
+				</td>
+				<td class="border px-4 py-2 text-right">
+					<input type="text" name="asana_workspace_name" id="update-asana-workspace-name"
+						form="update-project-form" class="w-full p-2 border border-gray-300 rounded"
+						placeholder="Asana Workspace Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<input type="text" name="asana_project_name" id="update-asana-project-name"
+						form="update-project-form" class="w-full p-2 border border-gray-300 rounded"
+						placeholder="Asana Project Name" required>
+				</td>
+				<td class="border px-4 py-2 text-left">
+					<form id="update-project-form" method="POST" action="/update-project">
+						<input type="hidden" name="id" id="update-project-id">
+						<button type="submit" class="btn update-btn" title="Update Project">
+							<span class="material-icons">check</span>
+						</button>
+					</form>
+				</td>
+			</tr>
+			{{ range .Projects }}
+			<tr>
+				<td class="border px-4 py-2 text-right">{{ .ADOProjectName }}</td>
+				<td class="border px-4 py-2 text-left">{{ .ADOTeamName }}</td>
+				<td class="border px-4 py-2 text-right">{{ .AsanaWorkspaceName }}</td>
+				<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
+				<td class="border px-4 py-2 text-left">
+					<div class="action-buttons">
+						<button type="button" class="btn edit-btn" data-id="{{ .ID.Hex }}" title="Edit Project"
+							aria-label="Edit Project">
+							<span class="material-icons">edit</span>
+						</button>
+						<button type="button" class="btn delete-btn" data-id="{{ .ID.Hex }}" title="Delete Project"
+							aria-label="Delete Project">
+							<span class=" material-icons">delete</span>
+						</button>
+					</div>
+				</td>
+			</tr>
+			{{ end }}
+		</tbody>
+	</table>
 </div>
 <script>
 	document.getElementById('add-project-btn').addEventListener('click', function () {
 		document.getElementById('add-project-form-row').classList.toggle('hidden');
 	});
+
+	document.querySelectorAll('.edit-btn').forEach(button => {
+		button.addEventListener('click', function () {
+			const row = this.closest('tr');
+			const adoProjectName = row.cells[0].innerText.trim();
+			const adoTeamName = row.cells[1].innerText.trim();
+			const asanaWorkspaceName = row.cells[2].innerText.trim();
+			const asanaProjectName = row.cells[3].innerText.trim();
+			const projectId = this.getAttribute('data-id');
+
+			document.getElementById('update-project-id').value = projectId;
+			document.getElementById('update-ado-project-name').value = adoProjectName;
+			document.getElementById('update-ado-team-name').value = adoTeamName;
+			document.getElementById('update-asana-workspace-name').value = asanaWorkspaceName;
+			document.getElementById('update-asana-project-name').value = asanaProjectName;
+			document.getElementById('update-project-form-row').classList.remove('hidden');
+		});
+	});
+
 	document.querySelectorAll('.delete-btn').forEach(button => {
 		button.addEventListener('click', function () {
 			const projectId = this.getAttribute('data-id');
