@@ -114,9 +114,9 @@ func deleteProjectHandler(app *App, c *gin.Context) {
 
 	projectID := c.Query("id")
 	if projectID == "" {
-		span.RecordError(fmt.Errorf("missing project ID"), trace.WithStackTrace(true))
+		span.RecordError(fmt.Errorf("project ID is required"), trace.WithStackTrace(true))
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing project ID",
+			"error": "project ID is required",
 		})
 		return
 	}
