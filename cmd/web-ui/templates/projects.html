@@ -84,11 +84,13 @@
 				<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
 				<td class="border px-4 py-2 text-left">
 					<div class="action-buttons">
-						<button type="button" class="btn edit-btn" data-id="{{ .ID.Hex }}" title="Edit Project">
+						<button type="button" class="btn edit-btn" data-id="{{ .ID.Hex }}" title="Edit Project"
+							aria-label="Edit Project">
 							<span class="material-icons">edit</span>
 						</button>
-						<button type="button" class="btn delete-btn" data-id="{{ .ID.Hex }}" title="Delete Project">
-							<span class="material-icons">delete</span>
+						<button type="button" class="btn delete-btn" data-id="{{ .ID.Hex }}" title="Delete Project"
+							aria-label="Delete Project">
+							<span class=" material-icons">delete</span>
 						</button>
 					</div>
 				</td>
