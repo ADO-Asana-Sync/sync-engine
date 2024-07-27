@@ -3,19 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"html/template"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"time"
+	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
+	"github.com/gin-gonic/contrib/renders/multitemplate"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/uptrace-go/uptrace"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -63,25 +63,16 @@ func main() {
 		}
 	}(ctx)
 
-	// Create a new ServeMux.
-	mux := http.NewServeMux()
+	router := gin.Default()
+	router.Use(otelgin.Middleware(serviceName))
+	router.HTMLRender = loadTemplates(ctx, app)
+	registerRoutes(router, app)
 
-	// Register handlers.
-	registerRoutes(mux, app)
-
-	// Wrap the entire mux with otelhttp.NewHandler.
-	handler := otelhttp.NewHandler(mux, "web-ui")
-
-	// Create a new http.Server instance with the wrapped handler.
-	httpServer := &http.Server{
-		Addr:         ":" + port,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
-		Handler:      handler,
-	}
 	log.Infof("listening on http://localhost:%v", port)
-	log.Fatal(httpServer.ListenAndServe())
+	listenAddress := fmt.Sprintf(":%v", port)
+	if err := router.Run(listenAddress); err != nil {
+		log.WithError(err).Fatal("error running the router")
+	}
 }
 
 func (app *App) setup(ctx context.Context) error {
@@ -127,18 +118,37 @@ func (app *App) setup(ctx context.Context) error {
 	return nil
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
-	templates := template.Must(template.ParseFiles(
-		filepath.Join("templates", "main.html"),
-		filepath.Join("templates", tmpl+".html"),
-	))
+func loadTemplates(ctx context.Context, app *App) multitemplate.Render {
+	_, span := app.Tracer.Start(ctx, "web-ui.loadTemplates")
+	defer span.End()
 
-	err := templates.ExecuteTemplate(w, "main", data)
+	templates := multitemplate.New()
+
+	// Read all files in the templates folder.
+	files, err := os.ReadDir("templates")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		span.RecordError(err, trace.WithStackTrace(true))
+		log.Fatalf("Failed to read templates directory: %v", err)
 	}
-}
 
-func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join("static", "favicon.ico"))
+	span.AddEvent(fmt.Sprintf("Found %v files in the templates directory", len(files)))
+
+	// Iterate over each file in the templates folder.
+	for _, file := range files {
+		// Skip directories and the main.html file.
+		if file.IsDir() || file.Name() == "main.html" {
+			continue
+		}
+
+		// Get the file name without the extension to use as the template name.
+		templateName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+
+		// Add the template using main.html and the current file.
+		templates.AddFromFiles(templateName,
+			filepath.Join("templates", "main.html"),
+			filepath.Join("templates", file.Name()),
+		)
+	}
+
+	return templates
 }

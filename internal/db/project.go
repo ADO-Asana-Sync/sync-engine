@@ -117,3 +117,34 @@ func (db *DB) RemoveProject(ctx context.Context, id primitive.ObjectID) error {
 
 	return nil
 }
+
+// UpdateProject updates an existing project in the database.
+// It takes a Project struct as input and returns an error, if any.
+func (db *DB) UpdateProject(ctx context.Context, project Project) error {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.UpdateProject")
+	defer span.End()
+
+	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
+
+	// Update the project using the ID.
+	span.SetAttributes(attribute.String("project_id", project.ID.String()))
+	filter := bson.M{"_id": project.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"ado_project_name":     project.ADOProjectName,
+			"ado_team_name":        project.ADOTeamName,
+			"asana_project_name":   project.AsanaProjectName,
+			"asana_workspace_name": project.AsanaWorkspaceName,
+		},
+	}
+	_, err := collection.UpdateOne(dbCtx, filter, update)
+	if err != nil {
+		err = fmt.Errorf("error updating project: %v", err)
+		span.RecordError(err)
+		return err
+	}
+
+	return nil
+}
