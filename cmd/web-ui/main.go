@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
 
 	serviceName = "web-ui"
 )
@@ -46,7 +46,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	log.Infof("Web-ui process started. Version: %v, commit: %v, date: %v", version, commit, date)
+	log.Infof("Web-ui process started. Version: %v, commit: %v, date: %v", Version, Commit, Date)
 	app := &App{}
 	err := app.setup(ctx)
 	if err != nil {
@@ -83,7 +83,7 @@ func (app *App) setup(ctx context.Context) error {
 	uptrace.ConfigureOpentelemetry(
 		uptrace.WithServiceName(serviceName),
 		uptrace.WithDSN(dsn),
-		uptrace.WithServiceVersion(version),
+		uptrace.WithServiceVersion(Version),
 		uptrace.WithDeploymentEnvironment(environment),
 	)
 	app.UptraceShutdown = uptrace.Shutdown
