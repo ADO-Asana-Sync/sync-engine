@@ -12,6 +12,11 @@ func registerRoutes(router *gin.Engine, app *App) {
 	// Dashboard routes.
 	router.GET("/", homeHandler)
 
+	// Healthcheck route.
+	router.GET("/health", func(c *gin.Context) {
+		healthcheckHandler(app, c)
+	})
+
 	// Projects routes.
 	router.GET("/projects", func(c *gin.Context) {
 		projectsHandler(app, c)
