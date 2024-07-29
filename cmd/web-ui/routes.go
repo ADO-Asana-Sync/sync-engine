@@ -27,7 +27,7 @@ func registerRoutes(router *gin.Engine, app *App) {
 	router.DELETE("/delete-project", func(c *gin.Context) {
 		deleteProjectHandler(app, c)
 	})
-	router.POST("/update-project", func(c *gin.Context) {
+	router.PUT("/update-project", func(c *gin.Context) {
 		editProjectHandler(app, c)
 	})
 }
