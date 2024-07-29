@@ -21,6 +21,8 @@ description = """Additions or modifications to the synchronization code"""
 description = """Additions or modifications to the database code"""
 [custom_labels."🌐 web-ui"]
 description = """Additions or modifications to the web-ui code"""
+[custom_labels."ci"]
+description = """Items related to continuous integration or continuous deployment"""
 
 [ignore]
 glob = ['go.mod', 'go.sum']
