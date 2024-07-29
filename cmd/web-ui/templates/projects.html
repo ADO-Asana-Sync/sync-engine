@@ -68,7 +68,8 @@
 						placeholder="Asana Project Name" required>
 				</td>
 				<td class="border px-4 py-2 text-left">
-					<form id="update-project-form" method="POST" action="/update-project" onsubmit="event.preventDefault(); updateProject();">
+					<form id="update-project-form" method="PUT" action="/update-project"
+						onsubmit="event.preventDefault(); updateProject();">
 						<input type="hidden" name="id" id="update-project-id">
 						<button type="submit" class="btn update-btn" title="Update Project">
 							<span class="material-icons">check</span>
@@ -138,21 +139,21 @@
 			}
 		});
 	});
-function updateProject() {
-	const form = document.getElementById('update-project-form');
-	const formData = new FormData(form);
-	const projectId = formData.get('id');
+	function updateProject() {
+		const form = document.getElementById('update-project-form');
+		const formData = new FormData(form);
+		const projectId = formData.get('id');
 
-	fetch(`/update-project?id=${projectId}`, {
-		method: 'PUT',
-		body: new URLSearchParams(formData)
-	}).then(response => {
-		if (response.ok) {
-			location.reload();
-		} else {
-			alert('Failed to update project');
-		}
-	});
-}
+		fetch(`/update-project?id=${projectId}`, {
+			method: 'PUT',
+			body: new URLSearchParams(formData)
+		}).then(response => {
+			if (response.ok) {
+				location.reload();
+			} else {
+				alert('Failed to update project');
+			}
+		});
+	}
 </script>
 {{ end }}
