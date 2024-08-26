@@ -9,8 +9,8 @@ import (
 	"github.com/range-labs/go-asana/asana"
 )
 
-// ListProjects lists all projects in the provided workspace, handling pagination.
-func ListProjects(ctx context.Context, c *http.Client, workspaceID string) ([]asana.Project, error) {
+// ListProjectsByWorkspace lists all projects in the provided workspace.
+func ListProjectsByWorkspace(ctx context.Context, c *http.Client, workspaceID string) ([]asana.Project, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ListProjects")
 	defer span.End()
 
@@ -19,21 +19,9 @@ func ListProjects(ctx context.Context, c *http.Client, workspaceID string) ([]as
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
-	var allProjects []asana.Project
-	var offset string
-
-	for {
-		projects, nextOffset, err := client.ListProjects(ctx, workspaceID, &asana.ListProjectsOptions{Offset: offset})
-		if err != nil {
-			return nil, err
-		}
-
-		allProjects = append(allProjects, projects...)
-
-		if nextOffset == "" {
-			break
-		}
-		offset = nextOffset
+	allProjects, err := client.ListProjects(ctx, &asana.Filter{WorkspaceGID: workspaceID})
+	if err != nil {
+		return nil, err
 	}
 
 	return allProjects, nil
