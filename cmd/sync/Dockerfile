@@ -1,6 +1,9 @@
 FROM golang:1.22-alpine AS builder
 
-RUN apk add --no-cache gcc g++ git
+RUN apk add --no-cache \
+	g++ \
+	gcc \
+	git
 
 ARG VERSION=0.0.0-development
 ARG COMMIT=none
