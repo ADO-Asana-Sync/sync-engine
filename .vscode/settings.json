@@ -1,6 +1,6 @@
 {
 	"sonarlint.connectedMode.project": {
-		"connectionId": "ADO-Asana-Sync",
+		"connectionId": "ado-asana-sync",
 		"projectKey": "ADO-Asana-Sync_sync-engine"
 	},
 	"cSpell.words": [
