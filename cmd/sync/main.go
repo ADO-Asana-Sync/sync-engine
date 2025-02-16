@@ -25,7 +25,7 @@ var (
 )
 
 type App struct {
-	Asana           *asana.Asana
+	Asana           asana.AsanaInterface
 	Azure           *azure.Azure
 	DB              *db.DB
 	Tracer          trace.Tracer

@@ -4,9 +4,11 @@
 		"projectKey": "ADO-Asana-Sync_sync-engine"
 	},
 	"cSpell.words": [
+		"Asana",
 		"azuredevops",
 		"connstr",
 		"contrib",
+		"goasana",
 		"gonic",
 		"Infof",
 		"logrus",
