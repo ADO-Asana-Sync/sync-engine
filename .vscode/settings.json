@@ -4,21 +4,31 @@
 		"projectKey": "ADO-Asana-Sync_sync-engine"
 	},
 	"cSpell.words": [
+		"Asana",
 		"azuredevops",
+		"bytedance",
 		"connstr",
 		"contrib",
 		"gonic",
+		"gopkg",
 		"Infof",
 		"logrus",
 		"multitemplate",
 		"otel",
 		"otelgin",
+		"otlploghttp",
+		"otlpmetric",
+		"pkcs",
 		"sirupsen",
+		"stdouttrace",
+		"stringprep",
 		"tmpl",
+		"uptrace",
 		"Wiql",
 		"wlog",
 		"workitems",
-		"workitemtracking"
+		"workitemtracking",
+		"youmark"
 	],
 	"git.branchProtection": [
 		"main"
