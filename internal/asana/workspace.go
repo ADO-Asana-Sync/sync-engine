@@ -12,6 +12,12 @@ var (
 	timeout = 60 * time.Second
 )
 
+// Workspace represents an Asana workspace with minimal required information.
+type Workspace struct {
+	ID   int64
+	Name string
+}
+
 func (a *Asana) ListWorkspaces(ctx context.Context) ([]Workspace, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ListWorkspaces")
 	defer span.End()

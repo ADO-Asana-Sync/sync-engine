@@ -14,6 +14,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type AzureInterface interface {
+	Connect(ctx context.Context, orgUrl, pat string)
+	GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]workitemtracking.WorkItemReference, error)
+	GetProjects(ctx context.Context) ([]core.TeamProjectReference, error)
+}
+
 type Azure struct {
 	Client *azuredevops.Connection
 }

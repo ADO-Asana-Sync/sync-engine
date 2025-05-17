@@ -10,6 +10,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// AsanaInterface defines the methods that the Asana client must implement.
+type AsanaInterface interface {
+	Connect(ctx context.Context, pat string)
+	ListWorkspaces(ctx context.Context) ([]Workspace, error)
+}
+
 type Asana struct {
 	Client *http.Client
 }
