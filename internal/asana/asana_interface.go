@@ -10,6 +10,7 @@ type AsanaInterface interface {
 	ListWorkspaces(ctx context.Context) ([]Workspace, error)
 }
 
+// Workspace represents an Asana workspace with minimal required information.
 type Workspace struct {
 	ID   int64
 	Name string
