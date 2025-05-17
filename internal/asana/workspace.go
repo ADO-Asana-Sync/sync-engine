@@ -2,7 +2,6 @@ package asana
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
@@ -13,11 +12,17 @@ var (
 	timeout = 60 * time.Second
 )
 
-func ListWorkspaces(ctx context.Context, c *http.Client) ([]asana.Workspace, error) {
+// Workspace represents an Asana workspace with minimal required information.
+type Workspace struct {
+	ID   int64
+	Name string
+}
+
+func (a *Asana) ListWorkspaces(ctx context.Context) ([]Workspace, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ListWorkspaces")
 	defer span.End()
 
-	client := asana.NewClient(c)
+	client := asana.NewClient(a.Client)
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -26,5 +31,10 @@ func ListWorkspaces(ctx context.Context, c *http.Client) ([]asana.Workspace, err
 	if err != nil {
 		return nil, err
 	}
-	return workspaces, nil
+
+	var result []Workspace
+	for _, ws := range workspaces {
+		result = append(result, Workspace{ID: ws.ID, Name: ws.Name})
+	}
+	return result, nil
 }

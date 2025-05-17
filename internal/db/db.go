@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/otel/codes"
@@ -21,6 +22,17 @@ var (
 	// Timeout is the default timeout for database operations.
 	Timeout = 10 * time.Second
 )
+
+type DBInterface interface {
+	Connect(ctx context.Context, uri string) error
+	Disconnect(ctx context.Context) error
+	Projects(ctx context.Context) ([]Project, error)
+	AddProject(ctx context.Context, project Project) error
+	RemoveProject(ctx context.Context, id primitive.ObjectID) error
+	UpdateProject(ctx context.Context, project Project) error
+	LastSync(ctx context.Context) LastSync
+	WriteLastSync(ctx context.Context, timestamp time.Time) error
+}
 
 type DB struct {
 	Client *mongo.Client
@@ -49,4 +61,8 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 	}
 
 	return nil
+}
+
+func (db *DB) Disconnect(ctx context.Context) error {
+	return db.Client.Disconnect(ctx)
 }

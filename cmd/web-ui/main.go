@@ -30,9 +30,9 @@ var (
 )
 
 type App struct {
-	Asana           *asana.Asana
-	Azure           *azure.Azure
-	DB              *db.DB
+	Asana           asana.AsanaInterface
+	Azure           azure.AzureInterface
+	DB              db.DBInterface
 	Tracer          trace.Tracer
 	UptraceShutdown func(ctx context.Context) error
 }
@@ -53,7 +53,7 @@ func main() {
 		log.WithError(err).Fatal("error setting up the app")
 	}
 	defer func(ctx context.Context) {
-		err := app.DB.Client.Disconnect(ctx)
+		err := app.DB.Disconnect(ctx)
 		if err != nil {
 			log.WithError(err).Fatal("error disconnecting from the DB")
 		}
