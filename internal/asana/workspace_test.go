@@ -31,6 +31,14 @@ func createWorkspaceResponse(workspaces []asana.Workspace, respErr asana.Errors)
 	}
 }
 
+// TestAsanaListWorkspaces tests the ListWorkspaces method of the Asana client.
+// It verifies that the method correctly handles various scenarios, including:
+// - Returning a single workspace
+// - Returning multiple workspaces
+// - Handling error responses from the Asana API
+// - Handling empty workspace lists
+// The test uses a table-driven approach to cover these cases and asserts that
+// the returned workspaces and errors match the expected results.
 func TestAsanaListWorkspaces(t *testing.T) {
 	tests := []struct {
 		name       string
