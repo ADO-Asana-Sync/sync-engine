@@ -14,5 +14,9 @@ func (m *MockWIClient) QueryByWiql(
 	args workitemtracking.QueryByWiqlArgs,
 ) (*workitemtracking.WorkItemQueryResult, error) {
 	ret := m.Called(ctx, args)
-	return ret.Get(0).(*workitemtracking.WorkItemQueryResult), ret.Error(1)
+	var result *workitemtracking.WorkItemQueryResult
+	if ret.Get(0) != nil {
+		result = ret.Get(0).(*workitemtracking.WorkItemQueryResult)
+	}
+	return result, ret.Error(1)
 }
