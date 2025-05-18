@@ -127,9 +127,7 @@ func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, e
 
 	for responseValue != nil {
 		// Create the slice of team projects.
-		for _, teamProjectReference := range (*responseValue).Value {
-			projects = append(projects, teamProjectReference)
-		}
+		projects = append(projects, (*responseValue).Value...)
 
 		// if continuationToken has a value, then there is at least one more page of projects to get.
 		if responseValue.ContinuationToken != "" {
