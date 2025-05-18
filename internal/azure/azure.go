@@ -93,7 +93,9 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 		return tasks, err
 	}
 
-	tasks = append(tasks, *(*responseValue).WorkItems...)
+	if responseValue.WorkItems != nil {
+		tasks = append(tasks, *responseValue.WorkItems...)
+	}
 
 	return tasks, nil
 }
@@ -123,12 +125,10 @@ func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, e
 		return projects, err
 	}
 
-	index := 0
 	for responseValue != nil {
 		// Create the slice of team projects.
 		for _, teamProjectReference := range (*responseValue).Value {
 			projects = append(projects, teamProjectReference)
-			index++
 		}
 
 		// if continuationToken has a value, then there is at least one more page of projects to get.
