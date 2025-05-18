@@ -30,19 +30,19 @@ func TestWorkItemFormatTitle(t *testing.T) {
 			name:    "empty title",
 			wi:      WorkItem{WorkItemType: "Task", ID: 789, Title: ""},
 			wantErr: true,
-			errMsg:  "missing work item title",
+			errMsg:  "missing property Title",
 		},
 		{
 			name:    "empty type",
 			wi:      WorkItem{WorkItemType: "", ID: 101, Title: "Untyped work item"},
 			wantErr: true,
-			errMsg:  "missing work item type",
+			errMsg:  "missing property WorkItemType",
 		},
 		{
 			name:    "zero number",
 			wi:      WorkItem{WorkItemType: "Bug", ID: 0, Title: "No number"},
 			wantErr: true,
-			errMsg:  "missing work item number",
+			errMsg:  "missing property ID",
 		},
 	}
 	for _, tt := range tests {
@@ -92,25 +92,25 @@ func TestWorkItemFormatTitleWithLink(t *testing.T) {
 			name:    "empty title",
 			wi:      WorkItem{WorkItemType: "Task", ID: 789, Title: "", URL: "https://dev.azure.com/org/project/_workitems/edit/789"},
 			wantErr: true,
-			errMsg:  "missing work item title",
+			errMsg:  "missing property Title",
 		},
 		{
 			name:    "empty type",
 			wi:      WorkItem{WorkItemType: "", ID: 101, Title: "Untyped work item", URL: "https://dev.azure.com/org/project/_workitems/edit/101"},
 			wantErr: true,
-			errMsg:  "missing work item type",
+			errMsg:  "missing property WorkItemType",
 		},
 		{
 			name:    "zero number",
 			wi:      WorkItem{WorkItemType: "Bug", ID: 0, Title: "No number", URL: "https://dev.azure.com/org/project/_workitems/edit/0"},
 			wantErr: true,
-			errMsg:  "missing work item number",
+			errMsg:  "missing property ID",
 		},
 		{
 			name:    "missing URL",
 			wi:      WorkItem{WorkItemType: "Bug", ID: 123, Title: "Crash on launch", URL: ""},
 			wantErr: true,
-			errMsg:  "missing work item URL",
+			errMsg:  "missing property URL",
 		},
 	}
 	for _, tt := range tests {
