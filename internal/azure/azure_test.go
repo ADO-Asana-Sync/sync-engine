@@ -139,9 +139,15 @@ func TestGetProjects(t *testing.T) {
 	type args struct {
 		ctx context.Context
 	}
+	// Use a slice of static UUIDs for deterministic tests
+	uuids := []uuid.UUID{
+		uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+		uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+		uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+	}
 	testProjects := []core.TeamProjectReference{
-		{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
-		{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
+		{Id: testutil.Ptr(uuids[0]), Name: testutil.Ptr("Project1")},
+		{Id: testutil.Ptr(uuids[1]), Name: testutil.Ptr("Project2")},
 	}
 	tests := []struct {
 		name    string
@@ -205,23 +211,23 @@ func TestGetProjects(t *testing.T) {
 			pages: []*core.GetProjectsResponseValue{
 				{
 					Value: []core.TeamProjectReference{
-						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
-						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
+						{Id: testutil.Ptr(uuids[0]), Name: testutil.Ptr("Project1")},
+						{Id: testutil.Ptr(uuids[1]), Name: testutil.Ptr("Project2")},
 					},
 					ContinuationToken: "1",
 				},
 				{
 					Value: []core.TeamProjectReference{
-						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project3")},
+						{Id: testutil.Ptr(uuids[2]), Name: testutil.Ptr("Project3")},
 					},
 					ContinuationToken: "",
 				},
 			},
 			mockErr: nil,
 			want: []core.TeamProjectReference{
-				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
-				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
-				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project3")},
+				{Id: testutil.Ptr(uuids[0]), Name: testutil.Ptr("Project1")},
+				{Id: testutil.Ptr(uuids[1]), Name: testutil.Ptr("Project2")},
+				{Id: testutil.Ptr(uuids[2]), Name: testutil.Ptr("Project3")},
 			},
 			wantErr: false,
 		},
