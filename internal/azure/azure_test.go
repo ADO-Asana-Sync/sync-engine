@@ -17,6 +17,7 @@ import (
 )
 
 func TestGetChangedWorkItems(t *testing.T) {
+	t.Parallel() // Enable parallel execution of sub-tests
 	const queryFmt = "SELECT [System.Id], [System.Title], [System.State] FROM workitems WHERE [System.ChangedDate] > '%s' ORDER BY [System.ChangedDate] DESC"
 	type args struct {
 		ctx      context.Context
@@ -34,6 +35,7 @@ func TestGetChangedWorkItems(t *testing.T) {
 		mockErr error
 		want    []workitemtracking.WorkItemReference
 		wantErr bool
+		errMsg  string // Add error message for error cases
 	}{
 		{
 			name:  "returns changed work items",
@@ -86,6 +88,7 @@ func TestGetChangedWorkItems(t *testing.T) {
 			mockErr: fmt.Errorf("failed to create work item client"),
 			want:    nil,
 			wantErr: true,
+			errMsg:  "failed to create work item client",
 		},
 		{
 			name:    "returns error when QueryByWiql fails",
@@ -96,10 +99,12 @@ func TestGetChangedWorkItems(t *testing.T) {
 			mockErr: fmt.Errorf("query failed"),
 			want:    nil,
 			wantErr: true,
+			errMsg:  "query failed",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockWI := new(MockWIClient)
 			if tt.name == "returns error when newWorkItemClient fails" {
 				tt.a.newWorkItemClient = func(ctx context.Context, conn *azuredevops.Connection) (WIClient, error) {
@@ -118,7 +123,7 @@ func TestGetChangedWorkItems(t *testing.T) {
 
 			got, err := tt.a.GetChangedWorkItems(tt.args.ctx, tt.args.lastSync)
 			if tt.wantErr {
-				require.Error(t, err)
+				require.ErrorContains(t, err, tt.errMsg)
 				return
 			}
 			require.NoError(t, err)
@@ -130,6 +135,7 @@ func TestGetChangedWorkItems(t *testing.T) {
 }
 
 func TestGetProjects(t *testing.T) {
+	t.Parallel() // Enable parallel execution of sub-tests
 	type args struct {
 		ctx context.Context
 	}
@@ -222,6 +228,7 @@ func TestGetProjects(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockCore := new(MockCoreClient)
 			if tt.name == "returns error when newCoreClient fails" {
 				tt.a.newCoreClient = func(ctx context.Context, conn *azuredevops.Connection) (CoreClient, error) {
