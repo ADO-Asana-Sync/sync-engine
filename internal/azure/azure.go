@@ -37,6 +37,17 @@ type Azure struct {
 	newWorkItemClient func(context.Context, *azuredevops.Connection) (WIClient, error)
 }
 
+func NewAzure() *Azure {
+	return &Azure{
+		newWorkItemClient: func(ctx context.Context, c *azuredevops.Connection) (WIClient, error) {
+			return workitemtracking.NewClient(ctx, c)
+		},
+		newCoreClient: func(ctx context.Context, c *azuredevops.Connection) (CoreClient, error) {
+			return core.NewClient(ctx, c)
+		},
+	}
+}
+
 // Connect establishes a connection to Azure DevOps using the provided organization URL and personal access token (PAT).
 // It configures tracing and sets up the Azure DevOps client for further operations.
 func (a *Azure) Connect(ctx context.Context, orgUrl, pat string) {
