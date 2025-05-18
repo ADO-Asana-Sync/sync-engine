@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7"
+	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/core"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/workitemtracking"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -123,6 +125,150 @@ func TestGetChangedWorkItems(t *testing.T) {
 			require.Equal(t, tt.want, got)
 
 			mockWI.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetProjects(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	testProjects := []core.TeamProjectReference{
+		{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
+		{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
+	}
+	tests := []struct {
+		name    string
+		a       *Azure
+		args    args
+		result  *core.GetProjectsResponseValue
+		mockErr error
+		want    []core.TeamProjectReference
+		wantErr bool
+		pages   []*core.GetProjectsResponseValue // for continuation tests
+	}{
+		{
+			name:    "returns a single project",
+			a:       &Azure{},
+			args:    args{ctx: context.Background()},
+			result:  &core.GetProjectsResponseValue{Value: testProjects[:1]},
+			mockErr: nil,
+			want:    testProjects[:1],
+			wantErr: false,
+		},
+		{
+			name:    "returns multiple projects",
+			a:       &Azure{},
+			args:    args{ctx: context.Background()},
+			result:  &core.GetProjectsResponseValue{Value: testProjects},
+			mockErr: nil,
+			want:    testProjects,
+			wantErr: false,
+		},
+		{
+			name:    "returns empty project list",
+			a:       &Azure{},
+			args:    args{ctx: context.Background()},
+			result:  &core.GetProjectsResponseValue{Value: []core.TeamProjectReference{}},
+			mockErr: nil,
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name:    "returns error when newCoreClient fails",
+			a:       &Azure{},
+			args:    args{ctx: context.Background()},
+			result:  nil,
+			mockErr: fmt.Errorf("failed to create core client"),
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "returns error when GetProjects fails",
+			a:       &Azure{},
+			args:    args{ctx: context.Background()},
+			result:  nil,
+			mockErr: fmt.Errorf("get projects failed"),
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "returns projects from multiple pages",
+			a:    &Azure{},
+			args: args{ctx: context.Background()},
+			pages: []*core.GetProjectsResponseValue{
+				{
+					Value: []core.TeamProjectReference{
+						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
+						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
+					},
+					ContinuationToken: "1",
+				},
+				{
+					Value: []core.TeamProjectReference{
+						{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project3")},
+					},
+					ContinuationToken: "",
+				},
+			},
+			mockErr: nil,
+			want: []core.TeamProjectReference{
+				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project1")},
+				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project2")},
+				{Id: testutil.Ptr(uuid.New()), Name: testutil.Ptr("Project3")},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCore := new(MockCoreClient)
+			if tt.name == "returns error when newCoreClient fails" {
+				tt.a.newCoreClient = func(ctx context.Context, conn *azuredevops.Connection) (CoreClient, error) {
+					return nil, tt.mockErr
+				}
+			} else if tt.name == "returns error when GetProjects fails" {
+				mockCore.On("GetProjects", mock.Anything, mock.Anything).Return(nil, tt.mockErr)
+				tt.a.newCoreClient = func(ctx context.Context, conn *azuredevops.Connection) (CoreClient, error) {
+					return mockCore, nil
+				}
+			} else if tt.pages != nil {
+				// Generalized continuation token paging
+				for i, page := range tt.pages {
+					if i == 0 {
+						mockCore.On("GetProjects", mock.Anything, mock.Anything).Return(page, nil).Once()
+					} else {
+						idx := i // capture loop var
+						mockCore.On("GetProjects", mock.Anything, mock.MatchedBy(func(args core.GetProjectsArgs) bool {
+							return args.ContinuationToken != nil && *args.ContinuationToken == idx
+						})).Return(page, nil).Once()
+					}
+				}
+				tt.a.newCoreClient = func(ctx context.Context, conn *azuredevops.Connection) (CoreClient, error) {
+					return mockCore, nil
+				}
+			} else {
+				mockCore.On("GetProjects", mock.Anything, mock.Anything).Return(tt.result, nil)
+				tt.a.newCoreClient = func(ctx context.Context, conn *azuredevops.Connection) (CoreClient, error) {
+					return mockCore, nil
+				}
+			}
+
+			got, err := tt.a.GetProjects(tt.args.ctx)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			if tt.pages != nil {
+				require.Len(t, got, len(tt.want))
+				for i, proj := range tt.want {
+					require.Equal(t, *proj.Name, *got[i].Name)
+				}
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+			mockCore.AssertExpectations(t)
 		})
 	}
 }
