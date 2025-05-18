@@ -120,7 +120,7 @@ func (app *App) setup(ctx context.Context) error {
 
 	// Azure DevOps setup.
 	log.Info("connecting to Azure DevOps")
-	app.Azure = &azure.Azure{}
+	app.Azure = azure.NewAzure()
 	org := os.Getenv("ADO_ORG_URL")
 	pat := os.Getenv("ADO_PAT")
 	app.Azure.Connect(ctx, org, pat)

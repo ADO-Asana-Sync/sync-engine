@@ -14,14 +14,38 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// AzureInterface defines the methods that the Azure client must implement.
 type AzureInterface interface {
 	Connect(ctx context.Context, orgUrl, pat string)
 	GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]workitemtracking.WorkItemReference, error)
 	GetProjects(ctx context.Context) ([]core.TeamProjectReference, error)
 }
 
+// WIClient defines the methods that the Azure Work Item client must implement.
+type WIClient interface {
+	QueryByWiql(ctx context.Context, args workitemtracking.QueryByWiqlArgs) (*workitemtracking.WorkItemQueryResult, error)
+}
+
+// CoreClient defines the methods that the Azure Core client must implement.
+type CoreClient interface {
+	GetProjects(ctx context.Context, args core.GetProjectsArgs) (*core.GetProjectsResponseValue, error)
+}
+
 type Azure struct {
-	Client *azuredevops.Connection
+	Client            *azuredevops.Connection
+	newCoreClient     func(context.Context, *azuredevops.Connection) (CoreClient, error)
+	newWorkItemClient func(context.Context, *azuredevops.Connection) (WIClient, error)
+}
+
+func NewAzure() *Azure {
+	return &Azure{
+		newWorkItemClient: func(ctx context.Context, c *azuredevops.Connection) (WIClient, error) {
+			return workitemtracking.NewClient(ctx, c)
+		},
+		newCoreClient: func(ctx context.Context, c *azuredevops.Connection) (CoreClient, error) {
+			return core.NewClient(ctx, c)
+		},
+	}
 }
 
 // Connect establishes a connection to Azure DevOps using the provided organization URL and personal access token (PAT).
@@ -45,7 +69,7 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 
 	var tasks []workitemtracking.WorkItemReference
 
-	workClient, err := workitemtracking.NewClient(ctx, a.Client)
+	workClient, err := a.newWorkItemClient(ctx, a.Client)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -69,7 +93,9 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 		return tasks, err
 	}
 
-	tasks = append(tasks, *(*responseValue).WorkItems...)
+	if responseValue.WorkItems != nil {
+		tasks = append(tasks, *responseValue.WorkItems...)
+	}
 
 	return tasks, nil
 }
@@ -84,7 +110,7 @@ func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, e
 	var projects []core.TeamProjectReference
 
 	// Get the projects.
-	coreClient, err := core.NewClient(ctx, a.Client)
+	coreClient, err := a.newCoreClient(ctx, a.Client)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -99,12 +125,10 @@ func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, e
 		return projects, err
 	}
 
-	index := 0
 	for responseValue != nil {
 		// Create the slice of team projects.
 		for _, teamProjectReference := range (*responseValue).Value {
 			projects = append(projects, teamProjectReference)
-			index++
 		}
 
 		// if continuationToken has a value, then there is at least one more page of projects to get.
