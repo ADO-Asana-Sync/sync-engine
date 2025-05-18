@@ -9,6 +9,9 @@ import (
 
 type MockWIClient struct{ mock.Mock }
 
+// Ensure the mock still satisfies the interface at compile-time.
+var _ WIClient = (*MockWIClient)(nil)
+
 func (m *MockWIClient) QueryByWiql(
 	ctx context.Context,
 	args workitemtracking.QueryByWiqlArgs,
