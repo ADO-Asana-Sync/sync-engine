@@ -66,11 +66,6 @@ func addProjectHandler(app *App, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ADO project name is required"})
 		return
 	}
-	adoTeamName := c.Request.FormValue("ado_team_name")
-	if adoTeamName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ADO team name is required"})
-		return
-	}
 	asanaProjectName := c.Request.FormValue("asana_project_name")
 	if asanaProjectName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Asana project name is required"})
@@ -85,7 +80,6 @@ func addProjectHandler(app *App, c *gin.Context) {
 	project := db.Project{
 		ID:                 primitive.NewObjectID(),
 		ADOProjectName:     adoProjectName,
-		ADOTeamName:        adoTeamName,
 		AsanaProjectName:   asanaProjectName,
 		AsanaWorkspaceName: asanaWorkspaceName,
 	}
@@ -149,7 +143,6 @@ func editProjectHandler(app *App, c *gin.Context) {
 
 	projectID := c.Request.FormValue("id")
 	adoProjectName := c.Request.FormValue("ado_project_name")
-	adoTeamName := c.Request.FormValue("ado_team_name")
 	asanaProjectName := c.Request.FormValue("asana_project_name")
 	asanaWorkspaceName := c.Request.FormValue("asana_workspace_name")
 
@@ -166,7 +159,6 @@ func editProjectHandler(app *App, c *gin.Context) {
 	project := db.Project{
 		ID:                 objID,
 		ADOProjectName:     adoProjectName,
-		ADOTeamName:        adoTeamName,
 		AsanaProjectName:   asanaProjectName,
 		AsanaWorkspaceName: asanaWorkspaceName,
 	}

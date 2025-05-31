@@ -20,7 +20,6 @@ var (
 type Project struct {
 	ID                 primitive.ObjectID `json:"id" bson:"_id"`
 	ADOProjectName     string             `json:"ado_project_name" bson:"ado_project_name"`
-	ADOTeamName        string             `json:"ado_team_name" bson:"ado_team_name"`
 	AsanaProjectName   string             `json:"asana_project_name" bson:"asana_project_name"`
 	AsanaWorkspaceName string             `json:"asana_workspace_name" bson:"asana_workspace_name"`
 }
@@ -60,7 +59,6 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 	// Check if the project already exists.
 	filter := bson.M{
 		"ado_project_name":     project.ADOProjectName,
-		"ado_team_name":        project.ADOTeamName,
 		"asana_project_name":   project.AsanaProjectName,
 		"asana_workspace_name": project.AsanaWorkspaceName,
 	}
@@ -134,7 +132,6 @@ func (db *DB) UpdateProject(ctx context.Context, project Project) error {
 	update := bson.M{
 		"$set": bson.M{
 			"ado_project_name":     project.ADOProjectName,
-			"ado_team_name":        project.ADOTeamName,
 			"asana_project_name":   project.AsanaProjectName,
 			"asana_workspace_name": project.AsanaWorkspaceName,
 		},
