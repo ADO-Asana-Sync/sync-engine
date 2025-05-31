@@ -143,8 +143,20 @@ func editProjectHandler(app *App, c *gin.Context) {
 
 	projectID := c.Request.FormValue("id")
 	adoProjectName := c.Request.FormValue("ado_project_name")
+	if adoProjectName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ADO project name is required"})
+		return
+	}
 	asanaProjectName := c.Request.FormValue("asana_project_name")
+	if asanaProjectName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Asana project name is required"})
+		return
+	}
 	asanaWorkspaceName := c.Request.FormValue("asana_workspace_name")
+	if asanaWorkspaceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Asana workspace name is required"})
+		return
+	}
 
 	// Convert projectID to ObjectID.
 	objID, err := primitive.ObjectIDFromHex(projectID)
