@@ -12,17 +12,18 @@ import (
 )
 
 // --- Model definitions (assuming they are not in easily importable packages) ---
+// These should mirror the definitions in worker.go or a shared models.go
 
-type TaskMapping struct {
+type TaskMapping struct { // Ensure this matches the definition in worker.go
 	ADOTaskID   int
 	AsanaTaskID string
 	SyncedAt    time.Time
-	// Other fields like a GID for the mapping itself could exist
 }
 
-type SyncTask struct {
-	ADOTaskID int
-	ProjectID string // Asana Project ID
+type SyncTask struct { // Ensure this matches the definition in worker.go
+	ADOTaskID       int
+	AsanaProjectGID string // Asana Project GID
+	ADOProjectID    string // ADO Project ID
 }
 
 // --- Interface definitions for mocks ---
@@ -159,7 +160,7 @@ func TestWorker_ExistingMapping_UpdateSuccess(t *testing.T) {
 		Tracer:      trace.NewNoopTracerProvider().Tracer("test"),
 	}
 
-	syncTask := SyncTask{ADOTaskID: 123, ProjectID: "as_project1"}
+	syncTask := SyncTask{ADOTaskID: 123, AsanaProjectGID: "as_project1", ADOProjectID: "ado_proj_abc"}
 	taskMapping := &TaskMapping{ADOTaskID: 123, AsanaTaskID: "asana_task1", SyncedAt: time.Now().Add(-time.Hour)}
 	adoWorkItem := &azure.WorkItem{
 		ID:           123,
@@ -247,7 +248,7 @@ func TestWorker_NoMapping_ExistingAsanaTask_UpdateSuccess(t *testing.T) {
 		Tracer:      trace.NewNoopTracerProvider().Tracer("test"),
 	}
 
-	syncTask := SyncTask{ADOTaskID: 456, ProjectID: "as_project2"}
+	syncTask := SyncTask{ADOTaskID: 456, AsanaProjectGID: "as_project2", ADOProjectID: "ado_proj_def"}
 	adoWorkItem := &azure.WorkItem{
 		ID:           456,
 		Title:        "ADO Task For Existing Asana",
@@ -273,8 +274,8 @@ func TestWorker_NoMapping_ExistingAsanaTask_UpdateSuccess(t *testing.T) {
 	}
 	// FindTaskByTitle should be called with adoWorkItem.Title (raw title)
 	mockAsana.FindTaskByTitleFunc = func(ctx context.Context, projectID string, title string) (*asana.Task, error) {
-		if projectID != syncTask.ProjectID {
-			t.Errorf("Expected FindTaskByTitle projectID %s, got %s", syncTask.ProjectID, projectID)
+		if projectID != syncTask.AsanaProjectGID {
+			t.Errorf("Expected FindTaskByTitle projectID %s, got %s", syncTask.AsanaProjectGID, projectID)
 		}
 		if title != adoWorkItem.Title { // Search by raw ADO title
 			t.Errorf("Expected FindTaskByTitle title '%s', got '%s'", adoWorkItem.Title, title)
@@ -393,7 +394,7 @@ func TestWorker_NoMapping_NoAsanaTask_CreateSuccess(t *testing.T) {
 		Tracer:      trace.NewNoopTracerProvider().Tracer("test"),
 	}
 
-	syncTask := SyncTask{ADOTaskID: 789, ProjectID: "as_project3"}
+	syncTask := SyncTask{ADOTaskID: 789, AsanaProjectGID: "as_project3", ADOProjectID: "ado_proj_ghi"}
 	adoWorkItem := &azure.WorkItem{
 		ID:           789,
 		Title:        "ADO Task For New Asana",
@@ -415,8 +416,8 @@ func TestWorker_NoMapping_NoAsanaTask_CreateSuccess(t *testing.T) {
 		return adoWorkItem, nil
 	}
 	mockAsana.FindTaskByTitleFunc = func(ctx context.Context, projectID string, title string) (*asana.Task, error) {
-		if projectID != syncTask.ProjectID {
-			t.Errorf("Expected FindTaskByTitle projectID %s, got %s", syncTask.ProjectID, projectID)
+		if projectID != syncTask.AsanaProjectGID {
+			t.Errorf("Expected FindTaskByTitle projectID %s, got %s", syncTask.AsanaProjectGID, projectID)
 		}
 		if title != adoWorkItem.Title { // Search by raw ADO title
 			t.Errorf("Expected FindTaskByTitle title '%s', got '%s'", adoWorkItem.Title, title)
@@ -424,8 +425,8 @@ func TestWorker_NoMapping_NoAsanaTask_CreateSuccess(t *testing.T) {
 		return nil, nil // No Asana task found by title
 	}
 	mockAsana.CreateTaskFunc = func(ctx context.Context, projectID string, name string, htmlDescription string) (*asana.Task, error) {
-		if projectID != syncTask.ProjectID {
-			t.Errorf("Expected CreateTask projectID %s, got %s", syncTask.ProjectID, projectID)
+		if projectID != syncTask.AsanaProjectGID {
+			t.Errorf("Expected CreateTask projectID %s, got %s", syncTask.AsanaProjectGID, projectID)
 		}
 		if name != expectedAsanaName {
 			t.Errorf("Expected CreateTask name '%s', got '%s'", expectedAsanaName, name)
