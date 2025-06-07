@@ -18,12 +18,14 @@ import (
 type AzureInterface interface {
 	Connect(ctx context.Context, orgUrl, pat string)
 	GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]workitemtracking.WorkItemReference, error)
+	GetWorkItem(ctx context.Context, id int) (WorkItem, error)
 	GetProjects(ctx context.Context) ([]core.TeamProjectReference, error)
 }
 
 // WIClient defines the methods that the Azure Work Item client must implement.
 type WIClient interface {
 	QueryByWiql(ctx context.Context, args workitemtracking.QueryByWiqlArgs) (*workitemtracking.WorkItemQueryResult, error)
+	GetWorkItem(ctx context.Context, args workitemtracking.GetWorkItemArgs) (*workitemtracking.WorkItem, error)
 }
 
 // CoreClient defines the methods that the Azure Core client must implement.
@@ -155,4 +157,75 @@ func (a *Azure) GetProjects(ctx context.Context) ([]core.TeamProjectReference, e
 	}
 
 	return projects, nil
+}
+
+// GetWorkItem retrieves a work item by ID and converts it to a simplified WorkItem struct.
+func (a *Azure) GetWorkItem(ctx context.Context, id int) (WorkItem, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "azure.GetWorkItem")
+	defer span.End()
+
+	var result WorkItem
+
+	workClient, err := a.newWorkItemClient(ctx, a.Client)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return result, err
+	}
+
+	wi, err := workClient.GetWorkItem(ctx, workitemtracking.GetWorkItemArgs{Id: &id})
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return result, err
+	}
+
+	if wi.Fields == nil {
+		return result, fmt.Errorf("work item missing fields")
+	}
+
+	fields := *wi.Fields
+
+	getStr := func(key string) string {
+		if v, ok := fields[key]; ok {
+			if s, ok2 := v.(string); ok2 {
+				return s
+			}
+		}
+		return ""
+	}
+
+	getTime := func(key string) time.Time {
+		if v, ok := fields[key]; ok {
+			switch t := v.(type) {
+			case time.Time:
+				return t
+			case string:
+				tt, _ := time.Parse(time.RFC3339, t)
+				return tt
+			}
+		}
+		return time.Time{}
+	}
+
+	result = WorkItem{
+		ID:           id,
+		AssignedTo:   getStr("System.AssignedTo"),
+		ChangedDate:  getTime("System.ChangedDate"),
+		CreatedDate:  getTime("System.CreatedDate"),
+		State:        getStr("System.State"),
+		Title:        getStr("System.Title"),
+		URL:          safeDerefString(wi.Url),
+		TeamProject:  getStr("System.TeamProject"),
+		WorkItemType: getStr("System.WorkItemType"),
+	}
+
+	return result, nil
+}
+
+func safeDerefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

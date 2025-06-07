@@ -124,6 +124,25 @@ func (db *DB) TaskByIDs(ctx context.Context, adoProjectID string, adoTaskID int,
 	return task, nil
 }
 
+// TaskByADOTaskID retrieves a task from the database by its ADO task ID.
+func (db *DB) TaskByADOTaskID(ctx context.Context, id int) (TaskMapping, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.TaskByADOTaskID")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, Timeout)
+	defer cancel()
+
+	var task TaskMapping
+	collection := db.Client.Database(DatabaseName).Collection(TasksCollection)
+	err := collection.FindOne(ctx, bson.M{"ado_task_id": id}).Decode(&task)
+	if err != nil {
+		err = fmt.Errorf("error finding task: %v", err)
+		span.RecordError(err)
+		return task, err
+	}
+	return task, nil
+}
+
 // AddTask adds a new task mapping to the database.
 // It takes a TaskMapping struct as input and returns an error, if any.
 func (db *DB) AddTask(ctx context.Context, task TaskMapping) error {
