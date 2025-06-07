@@ -16,7 +16,10 @@ func (app *App) worker(ctx context.Context, id int, syncTasks <-chan SyncTask) {
 
 	for task := range syncTasks {
 		if err := app.handleTask(ctx, wlog, task); err != nil {
-			wlog.WithError(err).Error("task sync failed")
+			// Skip logging for expected "no project mapping" errors
+			if err.Error() != "no project mapping" {
+				wlog.WithError(err).Error("task sync failed")
+			}
 		}
 	}
 }
@@ -96,7 +99,7 @@ func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string,
 			return p.AsanaProjectName, nil
 		}
 	}
-	log.WithField("project", adoProj).Warn("no project mapping found")
+	log.WithField("project", adoProj).Debug("no project mapping found")
 	return "", fmt.Errorf("no project mapping")
 }
 

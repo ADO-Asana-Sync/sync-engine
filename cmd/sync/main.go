@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
+	"runtime"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
@@ -30,6 +32,19 @@ type App struct {
 	DB              db.DBInterface
 	Tracer          trace.Tracer
 	UptraceShutdown func(ctx context.Context) error
+}
+
+func init() {
+	// Configure logrus to include file and line number in logs
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			filename := path.Base(f.File)
+			return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
+		},
+	})
+	// Enable caller reporting
+	log.SetReportCaller(true)
 }
 
 func main() {
