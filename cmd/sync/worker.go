@@ -69,7 +69,7 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 		return nil, azure.WorkItem{}, "", "", err
 	}
 
-	desc, err := wi.FormatTitleWithLink()
+			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
 	if err != nil {
 		return nil, azure.WorkItem{}, "", "", err
 	}
