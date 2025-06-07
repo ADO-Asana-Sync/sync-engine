@@ -71,8 +71,8 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 
 	desc, err := wi.FormatTitleWithLink()
 	if err != nil {
-	log.WithField("project", adoProj).Info("no project mapping found")
-	return "", nil
+		return nil, azure.WorkItem{}, "", "", err
+	}
 
 	if found {
 		return &mapping, wi, name, desc, nil
