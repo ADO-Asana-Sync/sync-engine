@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
@@ -16,6 +15,10 @@ func (app *App) worker(ctx context.Context, id int, syncTasks <-chan SyncTask) {
 
 	for task := range syncTasks {
 		if err := app.handleTask(ctx, wlog, task); err != nil {
+	if asanaProj == "" {
+		wlog.WithField("project", wi.TeamProject).Info("no project mapping found")
+		return nil
+	}
 			// Skip logging for expected "no project mapping" errors
 			if err.Error() != "no project mapping" {
 				wlog.WithError(err).Error("task sync failed")
@@ -71,8 +74,8 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 
 			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
 	if err != nil {
-		return nil, azure.WorkItem{}, "", "", err
-	}
+	log.WithField("project", adoProj).Info("no project mapping found")
+	return "", nil
 
 	if found {
 		return &mapping, wi, name, desc, nil
