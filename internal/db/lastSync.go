@@ -39,7 +39,7 @@ func (db *DB) LastSync(ctx context.Context) LastSync {
 
 // WriteLastSync updates the last sync time in the database.
 func (db *DB) WriteLastSync(ctx context.Context, timestamp time.Time) error {
-	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.LastSync")
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.WriteLastSync")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
