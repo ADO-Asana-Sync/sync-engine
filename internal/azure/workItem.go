@@ -14,6 +14,7 @@ type WorkItem struct {
 	State        string
 	Title        string
 	URL          string
+	TeamProject  string
 	WorkItemType string
 }
 

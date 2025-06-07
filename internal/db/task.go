@@ -11,6 +11,9 @@ import (
 	"golang.org/x/net/context"
 )
 
+// ErrorFmtFindingTask is the error format for when a task cannot be found
+const ErrorFmtFindingTask = "error finding task: %v"
+
 // TasksCollection is the name of the collection in the database for synced tasks.
 var TasksCollection = "tasks"
 
@@ -80,7 +83,7 @@ func (db *DB) TaskByID(ctx context.Context, id primitive.ObjectID) (TaskMapping,
 	collection := db.Client.Database(DatabaseName).Collection(TasksCollection)
 	err := collection.FindOne(ctx, bson.M{"_id": id}).Decode(&task)
 	if err != nil {
-		err = fmt.Errorf("error finding task: %v", err)
+		err = fmt.Errorf(ErrorFmtFindingTask, err)
 		span.RecordError(err)
 		return task, err
 	}
@@ -116,11 +119,32 @@ func (db *DB) TaskByIDs(ctx context.Context, adoProjectID string, adoTaskID int,
 
 	err := collection.FindOne(ctx, filter).Decode(&task)
 	if err != nil {
-		err = fmt.Errorf("error finding task: %v", err)
+		err = fmt.Errorf(ErrorFmtFindingTask, err)
 		span.RecordError(err)
 		return task, err
 	}
 
+	return task, nil
+}
+
+// TaskByADOTaskID retrieves a task from the database by its ADO task ID.
+func (db *DB) TaskByADOTaskID(ctx context.Context, id int) (TaskMapping, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.TaskByADOTaskID")
+	defer span.End()
+
+	span.SetAttributes(attribute.Int("ado_task_id", id))
+
+	ctx, cancel := context.WithTimeout(ctx, Timeout)
+	defer cancel()
+
+	var task TaskMapping
+	collection := db.Client.Database(DatabaseName).Collection(TasksCollection)
+	err := collection.FindOne(ctx, bson.M{"ado_task_id": id}).Decode(&task)
+	if err != nil {
+		err = fmt.Errorf(ErrorFmtFindingTask, err)
+		span.RecordError(err)
+		return task, err
+	}
 	return task, nil
 }
 

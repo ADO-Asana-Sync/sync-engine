@@ -32,6 +32,9 @@ type DBInterface interface {
 	UpdateProject(ctx context.Context, project Project) error
 	LastSync(ctx context.Context) LastSync
 	WriteLastSync(ctx context.Context, timestamp time.Time) error
+	TaskByADOTaskID(ctx context.Context, id int) (TaskMapping, error)
+	AddTask(ctx context.Context, task TaskMapping) error
+	UpdateTask(ctx context.Context, task TaskMapping) error
 }
 
 type DB struct {

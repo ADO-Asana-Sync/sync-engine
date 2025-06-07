@@ -14,6 +14,10 @@ import (
 type AsanaInterface interface {
 	Connect(ctx context.Context, pat string)
 	ListWorkspaces(ctx context.Context) ([]Workspace, error)
+	ProjectGIDByName(ctx context.Context, workspaceName, projectName string) (string, error)
+	ListProjectTasks(ctx context.Context, projectGID string) ([]Task, error)
+	CreateTask(ctx context.Context, projectGID, name, notes string) (Task, error)
+	UpdateTask(ctx context.Context, taskGID, name, notes string) error
 }
 
 type Asana struct {
