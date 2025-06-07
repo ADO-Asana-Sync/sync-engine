@@ -132,6 +132,8 @@ func (db *DB) TaskByADOTaskID(ctx context.Context, id int) (TaskMapping, error) 
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.TaskByADOTaskID")
 	defer span.End()
 
+	span.SetAttributes(attribute.Int("ado_task_id", id))
+
 	ctx, cancel := context.WithTimeout(ctx, Timeout)
 	defer cancel()
 
