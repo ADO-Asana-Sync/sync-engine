@@ -15,14 +15,7 @@ func (app *App) worker(ctx context.Context, id int, syncTasks <-chan SyncTask) {
 
 	for task := range syncTasks {
 		if err := app.handleTask(ctx, wlog, task); err != nil {
-	if asanaProj == "" {
-		wlog.WithField("project", wi.TeamProject).Info("no project mapping found")
-		return nil
-	}
-			// Skip logging for expected "no project mapping" errors
-			if err.Error() != "no project mapping" {
-				wlog.WithError(err).Error("task sync failed")
-			}
+			wlog.WithError(err).Error("task sync failed")
 		}
 	}
 }
@@ -45,6 +38,10 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 	asanaProj, err := app.asanaProjectForADO(tctx, wi.TeamProject)
 	if err != nil {
 		return err
+	}
+	if asanaProj == "" {
+		wlog.WithField("project", wi.TeamProject).Info("no project mapping found")
+		return nil
 	}
 
 	updated, err := app.tryUpdateExistingAsanaTask(tctx, asanaProj, wi, name, desc)
@@ -72,7 +69,7 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 		return nil, azure.WorkItem{}, "", "", err
 	}
 
-			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
+	desc, err := wi.FormatTitleWithLink()
 	if err != nil {
 	log.WithField("project", adoProj).Info("no project mapping found")
 	return "", nil
@@ -99,17 +96,17 @@ func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string,
 	}
 	for _, p := range projects {
 		if p.ADOProjectName == adoProj {
-			return p.AsanaProjectName, nil
+			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
 		}
 	}
-	log.WithField("project", adoProj).Debug("no project mapping found")
-	return "", fmt.Errorf("no project mapping")
+	log.WithField("project", adoProj).Info("no project mapping found")
+	return "", nil
 }
 
 func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) (bool, error) {
 	tasks, err := app.Asana.ListProjectTasks(ctx, asanaProj)
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 	for _, t := range tasks {
 		if t.Name == name {
@@ -124,9 +121,7 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 				AsanaTaskID:      t.GID,
 				AsanaLastUpdated: time.Now(),
 			}
-			if err := app.DB.AddTask(ctx, m); err != nil {
-				return false, err
-			}
+			_ = app.DB.AddTask(ctx, m)
 			return true, nil
 		}
 	}
