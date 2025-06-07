@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
@@ -68,16 +69,24 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.UpdateTask")
 	defer span.End()
 
+	client := asanaapi.NewClient(a.Client)
+
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	payload := map[string]map[string]string{"data": {"name": name, "notes": notes}}
+	payload := map[string]map[string]string{
+		"data": {
+			"name":  name,
+			"notes": notes,
+		},
+	}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("https://app.asana.com/api/1.0/tasks/%s", taskGID), bytes.NewReader(b))
+	u := client.BaseURL.ResolveReference(&url.URL{Path: fmt.Sprintf("tasks/%s", taskGID)})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
