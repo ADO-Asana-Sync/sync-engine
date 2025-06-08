@@ -23,4 +23,4 @@ docker compose up --watch --build --remove-orphans
 docker compose up --build --remove-orphans --scale web-ui=0 --scale sync=0
 ```
 
-The Mongo Admin UI may be found on the default port http://localhost:8081. Authenticate with the credentials found in the .env file.
+The Mongo Admin UI may be found on the port http://localhost:8581. Authenticate with the credentials found in the .env file.

@@ -6,6 +6,8 @@ import (
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"github.com/range-labs/go-asana/asana"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -29,6 +31,8 @@ func (a *Asana) ListWorkspaces(ctx context.Context) ([]Workspace, error) {
 
 	workspaces, err := client.ListWorkspaces(ctx)
 	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
