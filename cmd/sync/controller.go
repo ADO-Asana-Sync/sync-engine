@@ -17,24 +17,6 @@ func (app *App) controller(ctx context.Context, syncTasks chan<- SyncTask) {
 
 	log.Info("controller started")
 
-	// // List all projects in DB
-	// projects, err := app.DB.Projects()
-	// if err != nil {
-	// 	log.WithError(err).Fatal("error listing projects")
-	// }
-	// spew.Dump(projects)
-
-	// // List all ADO projects
-	// proj, err := app.Azure.GetProjects(ctx)
-	// if err != nil {
-	// 	span.RecordError(err, trace.WithStackTrace(true))
-	// 	span.SetStatus(codes.Error, err.Error())
-	// 	log.WithError(err).Fatal("error getting projects")
-	// }
-	// for _, p := range proj {
-	// 	syncTasks <- SyncTask{ADOTaskID: p.Id.String(), AsanaTaskID: ""}
-	// }
-
 	// List all ADO projects
 	lastSync := app.DB.LastSync(ctx)
 	log.WithField("lastSyncTime", lastSync.Time).Info("get items modified since last sync")
