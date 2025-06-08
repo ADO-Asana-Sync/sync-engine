@@ -26,7 +26,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 	tctx, span := app.Tracer.Start(ctx, "sync.worker.taskItem")
 	defer span.End()
 
-	wlog.Infof("syncing %v", task.ADOTaskID)
+	wlog.Infof("syncing ADO work item %v", task.ADOTaskID)
 
 	mapping, wi, name, desc, err := app.prepWorkItem(tctx, task.ADOTaskID)
 	if err != nil {
@@ -48,7 +48,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 		return err
 	}
 	if asanaProj == "" {
-		wlog.WithField("project", wi.TeamProject).Info("no project mapping found")
+		wlog.WithField("project", wi.TeamProject).Debug("project not mapped to Asana, skipping")
 		return nil
 	}
 
@@ -110,7 +110,7 @@ func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string,
 			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
 		}
 	}
-	log.WithField("project", adoProj).Info("no project mapping found")
+	log.WithField("project", adoProj).Debug("no project mapping found")
 	return "", nil
 }
 
