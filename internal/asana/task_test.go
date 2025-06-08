@@ -158,7 +158,7 @@ func TestAsanaCreateTask(t *testing.T) {
 			require.NoError(t, req.ParseForm())
 			require.Equal(t, "42", req.Form.Get("projects"))
 			require.Equal(t, tt.task.Name, req.Form.Get("name"))
-			require.Equal(t, "notes", req.Form.Get("html_notes"))
+			require.Equal(t, "<body>notes</body>", req.Form.Get("html_notes"))
 		})
 	}
 }
@@ -207,7 +207,13 @@ func TestAsanaUpdateTask(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, req)
 			body, _ := io.ReadAll(req.Body)
-			require.Contains(t, string(body), "\"html_notes\":\"notes\"")
+			var payload struct {
+				Data struct {
+					HTML string `json:"html_notes"`
+				} `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(body, &payload))
+			require.Equal(t, "<body>notes</body>", payload.Data.HTML)
 		})
 	}
 }

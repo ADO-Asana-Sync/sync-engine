@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	asanaapi "github.com/range-labs/go-asana/asana"
@@ -54,6 +55,8 @@ func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	notes = ensureHTMLBody(notes)
+
 	fields := map[string]string{
 		"projects":   projectGID,
 		"name":       name,
@@ -75,6 +78,8 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	notes = ensureHTMLBody(notes)
 
 	payload := map[string]map[string]string{
 		"data": {
@@ -104,4 +109,13 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 		return fmt.Errorf("asana update failed: %s", string(body))
 	}
 	return nil
+}
+
+// ensureHTMLBody wraps the provided notes in a <body> element if one is not already present.
+func ensureHTMLBody(notes string) string {
+	lower := strings.ToLower(notes)
+	if strings.Contains(lower, "<body") {
+		return notes
+	}
+	return "<body>" + notes + "</body>"
 }
