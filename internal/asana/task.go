@@ -45,6 +45,7 @@ func (a *Asana) ListProjectTasks(ctx context.Context, projectGID string) ([]Task
 	return result, nil
 }
 
+// CreateTask creates a new task in the given project using HTML notes for the description.
 func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) (Task, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.CreateTask")
 	defer span.End()
@@ -54,9 +55,9 @@ func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) 
 	defer cancel()
 
 	fields := map[string]string{
-		"projects": projectGID,
-		"name":     name,
-		"notes":    notes,
+		"projects":   projectGID,
+		"name":       name,
+		"html_notes": notes,
 	}
 	t, err := client.CreateTask(ctx, fields, nil)
 	if err != nil {
@@ -65,6 +66,7 @@ func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) 
 	return Task{GID: t.GID, Name: t.Name}, nil
 }
 
+// UpdateTask updates an existing task using HTML notes for the description.
 func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) error {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.UpdateTask")
 	defer span.End()
@@ -76,8 +78,8 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 
 	payload := map[string]map[string]string{
 		"data": {
-			"name":  name,
-			"notes": notes,
+			"name":       name,
+			"html_notes": notes,
 		},
 	}
 	b, err := json.Marshal(payload)

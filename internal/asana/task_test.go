@@ -142,7 +142,8 @@ func TestAsanaCreateTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := createTaskResponse(tt.task, tt.respErr)
-			client := testutil.NewTestClient(resp, nil)
+			var req *http.Request
+			client := testutil.NewTestClientWithRequest(resp, nil, &req)
 			a := &Asana{Client: client}
 			got, err := a.CreateTask(context.Background(), "42", tt.task.Name, "notes")
 			if tt.wantErr {
@@ -152,6 +153,12 @@ func TestAsanaCreateTask(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
+			require.NotNil(t, req)
+			require.Equal(t, http.MethodPost, req.Method)
+			require.NoError(t, req.ParseForm())
+			require.Equal(t, "42", req.Form.Get("projects"))
+			require.Equal(t, tt.task.Name, req.Form.Get("name"))
+			require.Equal(t, "notes", req.Form.Get("html_notes"))
 		})
 	}
 }
@@ -189,14 +196,18 @@ func TestAsanaUpdateTask(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := testutil.NewTestClient(tt.resp, tt.respErr)
+			var req *http.Request
+			client := testutil.NewTestClientWithRequest(tt.resp, tt.respErr, &req)
 			a := &Asana{Client: client}
 			err := a.UpdateTask(context.Background(), "1", "name", "notes")
 			if tt.wantErr {
 				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+				return
 			}
+			require.NoError(t, err)
+			require.NotNil(t, req)
+			body, _ := io.ReadAll(req.Body)
+			require.Contains(t, string(body), "\"html_notes\":\"notes\"")
 		})
 	}
 }

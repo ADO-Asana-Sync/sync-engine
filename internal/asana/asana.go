@@ -16,7 +16,11 @@ type AsanaInterface interface {
 	ListWorkspaces(ctx context.Context) ([]Workspace, error)
 	ProjectGIDByName(ctx context.Context, workspaceName, projectName string) (string, error)
 	ListProjectTasks(ctx context.Context, projectGID string) ([]Task, error)
+	// CreateTask creates a task in the given project. The notes parameter
+	// should contain HTML content which will be stored as the task description.
 	CreateTask(ctx context.Context, projectGID, name, notes string) (Task, error)
+	// UpdateTask updates an existing task. The notes parameter should
+	// contain HTML content for the description.
 	UpdateTask(ctx context.Context, taskGID, name, notes string) error
 }
 
