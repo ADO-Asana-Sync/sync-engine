@@ -66,17 +66,32 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/mongo:/data/db
+    healthcheck: {
+        test: [
+          "CMD",
+          "mongo",
+          "--eval",
+          "db.adminCommand('ping')"
+        ],
+        interval: "10s",
+        timeout: "5s",
+        retries: 5,
+        start_period: "30s"
+      }
 
   mongo-express:
     image: mongo-express:1-20
+    depends_on:
+      mongo:
+        condition: service_healthy
     environment:
       ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_ADMIN_PASSWORD}"
       ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_ADMIN_USERNAME}"
-      ME_CONFIG_BASICAUTH: "true"
+      ME_CONFIG_BASICAUTH_ENABLED: "true"
       ME_CONFIG_MONGODB_AUTH_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD}"
       ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
       ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017"
     ports:
-      - 8081:8081
+      - 8581:8081
     restart: unless-stopped

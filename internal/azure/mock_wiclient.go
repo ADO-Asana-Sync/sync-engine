@@ -23,3 +23,15 @@ func (m *MockWIClient) QueryByWiql(
 	}
 	return result, ret.Error(1)
 }
+
+func (m *MockWIClient) GetWorkItem(
+	ctx context.Context,
+	args workitemtracking.GetWorkItemArgs,
+) (*workitemtracking.WorkItem, error) {
+	ret := m.Called(ctx, args)
+	var wi *workitemtracking.WorkItem
+	if ret.Get(0) != nil {
+		wi = ret.Get(0).(*workitemtracking.WorkItem)
+	}
+	return wi, ret.Error(1)
+}
