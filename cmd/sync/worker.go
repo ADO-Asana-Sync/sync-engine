@@ -16,8 +16,12 @@ func (app *App) worker(ctx context.Context, id int, syncTasks <-chan SyncTask) {
 	wlog.Infof("worker started")
 
 	for task := range syncTasks {
-		if err := app.handleTask(ctx, wlog, task); err != nil {
+		err := app.handleTask(ctx, wlog, task)
+		if err != nil {
 			wlog.WithError(err).Error("task sync failed")
+		}
+		if task.Result != nil {
+			task.Result <- err
 		}
 	}
 }
