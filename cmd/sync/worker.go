@@ -7,6 +7,8 @@ import (
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (app *App) worker(ctx context.Context, id int, syncTasks <-chan SyncTask) {
@@ -28,6 +30,9 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 
 	mapping, wi, name, desc, err := app.prepWorkItem(tctx, task.ADOTaskID)
 	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		wlog.WithError(err).Fatal("failure preparing work item")
 		return err
 	}
 
@@ -37,6 +42,9 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 
 	asanaProj, err := app.asanaProjectForADO(tctx, wi.TeamProject)
 	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		wlog.WithError(err).WithField("project", wi.TeamProject).Error("error getting Asana project for ADO project")
 		return err
 	}
 	if asanaProj == "" {
@@ -46,6 +54,9 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 
 	updated, err := app.tryUpdateExistingAsanaTask(tctx, asanaProj, wi, name, desc)
 	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		wlog.WithError(err).WithField("project", wi.TeamProject).Error("error updating existing Asana task")
 		return err
 	}
 	if updated {
