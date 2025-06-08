@@ -7,4 +7,5 @@ type SyncTask struct {
 	ADOLastUpdated   time.Time
 	AsanaTaskID      string
 	AsanaLastUpdated time.Time
+	Result           chan error
 }

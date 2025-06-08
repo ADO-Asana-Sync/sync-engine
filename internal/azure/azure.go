@@ -84,10 +84,13 @@ func (a *Azure) GetChangedWorkItems(ctx context.Context, lastSync time.Time) ([]
 	)
 
 	// Get the first page of work items.
+	// Enable time precision so the query includes the timestamp and not just the date
+	timePrecision := true
 	responseValue, err := workClient.QueryByWiql(ctx, workitemtracking.QueryByWiqlArgs{
 		Wiql: &workitemtracking.Wiql{
 			Query: &qs,
 		},
+		TimePrecision: &timePrecision,
 	})
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))

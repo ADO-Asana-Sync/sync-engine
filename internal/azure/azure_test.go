@@ -113,7 +113,9 @@ func TestGetChangedWorkItems(t *testing.T) {
 			} else {
 				mockWI.
 					On("QueryByWiql", mock.Anything, mock.MatchedBy(func(args workitemtracking.QueryByWiqlArgs) bool {
-						return args.Wiql != nil && args.Wiql.Query != nil && *args.Wiql.Query == tt.query
+						return args.Wiql != nil && args.Wiql.Query != nil &&
+							*args.Wiql.Query == tt.query &&
+							args.TimePrecision != nil && *args.TimePrecision
 					})).
 					Return(tt.result, tt.mockErr)
 				tt.a.newWorkItemClient = func(ctx context.Context, conn *azuredevops.Connection) (WIClient, error) {
