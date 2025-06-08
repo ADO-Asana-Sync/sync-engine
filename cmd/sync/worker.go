@@ -32,7 +32,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
-		wlog.WithError(err).Fatal("failure preparing work item")
+		wlog.WithError(err).Error("failure preparing work item")
 		return err
 	}
 
@@ -117,7 +117,7 @@ func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string,
 func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) (bool, error) {
 	tasks, err := app.Asana.ListProjectTasks(ctx, asanaProj)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	for _, t := range tasks {
 		if t.Name == name {
@@ -132,7 +132,9 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 				AsanaTaskID:      t.GID,
 				AsanaLastUpdated: time.Now(),
 			}
-			_ = app.DB.AddTask(ctx, m)
+			if err := app.DB.AddTask(ctx, m); err != nil {
+				return false, err
+			}
 			return true, nil
 		}
 	}
