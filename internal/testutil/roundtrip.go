@@ -20,3 +20,16 @@ func NewTestClient(resp *http.Response, err error) *http.Client {
 		}),
 	}
 }
+
+// NewTestClientWithRequest behaves like NewTestClient but also returns the
+// request received via the reqOut pointer for inspection in tests.
+func NewTestClientWithRequest(resp *http.Response, err error, reqOut **http.Request) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if reqOut != nil {
+				*reqOut = req
+			}
+			return resp, err
+		}),
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	asanaapi "github.com/range-labs/go-asana/asana"
@@ -45,6 +46,7 @@ func (a *Asana) ListProjectTasks(ctx context.Context, projectGID string) ([]Task
 	return result, nil
 }
 
+// CreateTask creates a new task in the given project using HTML notes for the description.
 func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) (Task, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.CreateTask")
 	defer span.End()
@@ -53,10 +55,12 @@ func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	notes = ensureHTMLBody(notes)
+
 	fields := map[string]string{
-		"projects": projectGID,
-		"name":     name,
-		"notes":    notes,
+		"projects":   projectGID,
+		"name":       name,
+		"html_notes": notes,
 	}
 	t, err := client.CreateTask(ctx, fields, nil)
 	if err != nil {
@@ -65,6 +69,7 @@ func (a *Asana) CreateTask(ctx context.Context, projectGID, name, notes string) 
 	return Task{GID: t.GID, Name: t.Name}, nil
 }
 
+// UpdateTask updates an existing task using HTML notes for the description.
 func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) error {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.UpdateTask")
 	defer span.End()
@@ -74,10 +79,12 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	notes = ensureHTMLBody(notes)
+
 	payload := map[string]map[string]string{
 		"data": {
-			"name":  name,
-			"notes": notes,
+			"name":       name,
+			"html_notes": notes,
 		},
 	}
 	b, err := json.Marshal(payload)
@@ -102,4 +109,13 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 		return fmt.Errorf("asana update failed: %s", string(body))
 	}
 	return nil
+}
+
+// ensureHTMLBody wraps the provided notes in a <body> element if one is not already present.
+func ensureHTMLBody(notes string) string {
+	lower := strings.ToLower(notes)
+	if strings.Contains(lower, "<body") {
+		return notes
+	}
+	return "<body>" + notes + "</body>"
 }
