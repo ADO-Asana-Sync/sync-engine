@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/testutil"
-	"github.com/range-labs/go-asana/asana"
+	"github.com/qw4n7y/go-asana/asana"
 	"github.com/stretchr/testify/require"
 )
 
