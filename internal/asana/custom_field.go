@@ -2,11 +2,7 @@ package asana
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	asanaapi "github.com/qw4n7y/go-asana/asana"
@@ -48,39 +44,15 @@ func (a *Asana) CustomFieldByName(ctx context.Context, workspaceName, fieldName 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	u := client.BaseURL.ResolveReference(&url.URL{Path: fmt.Sprintf("workspaces/%d/custom_fields", wsID)})
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-	if err != nil {
+	var fields []CustomField
+
+	if err := client.Request(ctx, fmt.Sprintf("workspaces/%d/custom_fields", wsID), nil, &fields); err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
 		return CustomField{}, err
 	}
 
-	resp, err := a.Client.Do(req)
-	if err != nil {
-		span.RecordError(err, trace.WithStackTrace(true))
-		span.SetStatus(codes.Error, err.Error())
-		return CustomField{}, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("asana custom fields request failed: %s", string(body))
-		span.RecordError(err, trace.WithStackTrace(true))
-		span.SetStatus(codes.Error, err.Error())
-		return CustomField{}, err
-	}
-
-	var result struct {
-		Data []CustomField `json:"data"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		span.RecordError(err, trace.WithStackTrace(true))
-		span.SetStatus(codes.Error, err.Error())
-		return CustomField{}, err
-	}
-
-	for _, f := range result.Data {
+	for _, f := range fields {
 		if f.Name == fieldName {
 			return f, nil
 		}
