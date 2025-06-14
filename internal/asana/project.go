@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
-	asanaapi "github.com/range-labs/go-asana/asana"
+	asanaapi "github.com/qw4n7y/go-asana/asana"
 )
 
 // Project represents minimal info about an Asana project.
