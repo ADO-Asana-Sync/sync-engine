@@ -112,6 +112,12 @@ func TestWorkItemFormatTitleWithLink(t *testing.T) {
 			wantErr: true,
 			errMsg:  "missing property URL",
 		},
+		{
+			name:    "title with HTML tags",
+			wi:      WorkItem{WorkItemType: "Bug", ID: 123, Title: "<field> bad", URL: "https://dev.azure.com/org/project/_workitems/edit/123"},
+			want:    `<a href="https://dev.azure.com/org/project/_workitems/edit/123">Bug 123:</a> &lt;field&gt; bad`,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
