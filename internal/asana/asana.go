@@ -20,6 +20,10 @@ type AsanaInterface interface {
 	CustomFieldByName(ctx context.Context, workspaceName, fieldName string) (CustomField, error)
 	// ProjectHasCustomField checks if the given project has a custom field with the provided name.
 	ProjectHasCustomField(ctx context.Context, projectGID, fieldName string) (bool, error)
+	// ProjectCustomFieldByName returns the custom field with the provided name
+	// from the given project. The search is case-insensitive. If the field is
+	// not found, an error is returned.
+	ProjectCustomFieldByName(ctx context.Context, projectGID, fieldName string) (CustomField, error)
 	ListProjectTasks(ctx context.Context, projectGID string) ([]Task, error)
 	// CreateTask creates a task in the given project. The notes parameter
 	// should contain HTML wrapped in a <body> element which will be stored as
@@ -28,6 +32,10 @@ type AsanaInterface interface {
 	// UpdateTask updates an existing task. The notes parameter should
 	// contain HTML wrapped in a <body> element for the description.
 	UpdateTask(ctx context.Context, taskGID, name, notes string) error
+	// CreateTaskWithCustomFields creates a task with additional custom fields.
+	CreateTaskWithCustomFields(ctx context.Context, projectGID, name, notes string, customFields map[string]string) (Task, error)
+	// UpdateTaskWithCustomFields updates a task and sets custom field values.
+	UpdateTaskWithCustomFields(ctx context.Context, taskGID, name, notes string, customFields map[string]string) error
 }
 
 type Asana struct {

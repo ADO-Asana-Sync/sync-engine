@@ -30,6 +30,7 @@ type App struct {
 	Asana           asana.AsanaInterface
 	Azure           azure.AzureInterface
 	DB              db.DBInterface
+	CacheTTL        time.Duration
 	Tracer          trace.Tracer
 	UptraceShutdown func(ctx context.Context) error
 }
@@ -105,6 +106,19 @@ func getSleepTime() time.Duration {
 	return d
 }
 
+func getCacheTTL() time.Duration {
+	ttl := os.Getenv("PROPERTY_CACHE_TTL")
+	if ttl == "" {
+		return 24 * time.Hour
+	}
+	d, err := time.ParseDuration(ttl)
+	if err != nil {
+		log.WithError(err).Warn("unable to parse PROPERTY_CACHE_TTL, defaulting to 24h")
+		return 24 * time.Hour
+	}
+	return d
+}
+
 func (app *App) setup(ctx context.Context) error {
 	// Uptrace setup.
 	log.Info("connecting to Uptrace")
@@ -144,6 +158,8 @@ func (app *App) setup(ctx context.Context) error {
 	log.Info("connecting to Asana")
 	app.Asana = &asana.Asana{}
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
+
+	app.CacheTTL = getCacheTTL()
 
 	return nil
 }

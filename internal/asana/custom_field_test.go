@@ -150,3 +150,42 @@ func TestAsanaProjectHasCustomField(t *testing.T) {
 		})
 	}
 }
+
+func TestAsanaProjectCustomFieldByName(t *testing.T) {
+	foundResp := createSettingsResponse([]struct {
+		CustomField CustomField `json:"custom_field"`
+	}{{CustomField: CustomField{GID: "f1", Name: "Link"}}})
+	missingResp := createSettingsResponse([]struct {
+		CustomField CustomField `json:"custom_field"`
+	}{{CustomField: CustomField{GID: "f1", Name: "Other"}}})
+	badResp := &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader("oops")), Header: make(http.Header)}
+	payResp := &http.Response{StatusCode: http.StatusPaymentRequired, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header)}
+
+	tests := []struct {
+		name      string
+		resp      *http.Response
+		respErr   error
+		fieldName string
+		want      CustomField
+		wantErr   bool
+	}{
+		{name: "found", resp: foundResp, fieldName: "LINK", want: CustomField{GID: "f1", Name: "Link"}},
+		{name: "missing", resp: missingResp, fieldName: "link", wantErr: true},
+		{name: "payment required", resp: payResp, fieldName: "link", wantErr: true},
+		{name: "api error", resp: badResp, respErr: nil, fieldName: "link", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := testutil.NewTestClient(tt.resp, tt.respErr)
+			a := &Asana{Client: client}
+			got, err := a.ProjectCustomFieldByName(context.Background(), "1", tt.fieldName)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
