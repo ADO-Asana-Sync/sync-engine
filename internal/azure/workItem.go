@@ -2,6 +2,7 @@ package azure
 
 import (
 	"fmt"
+	"html"
 	"time"
 )
 
@@ -61,5 +62,6 @@ func (wi WorkItem) FormatTitleWithLink() (string, error) {
 		return "", err
 	}
 	prefix := fmt.Sprintf("%s %d:", wi.WorkItemType, wi.ID)
-	return fmt.Sprintf(`<a href="%s">%s</a> %s`, wi.URL, prefix, wi.Title), nil
+	title := html.EscapeString(wi.Title)
+	return fmt.Sprintf(`<a href="%s">%s</a> %s`, wi.URL, prefix, title), nil
 }
