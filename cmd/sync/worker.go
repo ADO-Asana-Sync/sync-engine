@@ -46,7 +46,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 		return app.updateExistingTask(tctx, wi, *mapping, name, desc)
 	}
 
-	asanaProj, err := app.asanaProjectForADO(tctx, wi.TeamProject)
+	asanaProj, workspace, err := app.asanaProjectForADO(tctx, wi.TeamProject)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -58,7 +58,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 		return nil
 	}
 
-	updated, err := app.tryUpdateExistingAsanaTask(tctx, asanaProj, wi, name, desc)
+	updated, err := app.tryUpdateExistingAsanaTask(tctx, asanaProj, workspace, wi, name, desc)
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -69,7 +69,7 @@ func (app *App) handleTask(ctx context.Context, wlog *log.Entry, task SyncTask) 
 		return nil
 	}
 
-	return app.createAndMapTask(tctx, asanaProj, wi, name, desc)
+	return app.createAndMapTask(tctx, asanaProj, workspace, wi, name, desc)
 }
 
 func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azure.WorkItem, string, string, error) {
@@ -115,24 +115,30 @@ func (app *App) updateExistingTask(ctx context.Context, wi azure.WorkItem, mappi
 	}
 	mapping.ADOLastUpdated = wi.ChangedDate
 	mapping.AsanaLastUpdated = time.Now()
-	return app.DB.UpdateTask(ctx, mapping)
+	if err := app.DB.UpdateTask(ctx, mapping); err != nil {
+		return err
+	}
+	ws, _ := app.workspaceForADO(ctx, mapping.ADOProjectID)
+	app.addSyncedTag(ctx, ws, mapping.AsanaTaskID)
+	return nil
 }
 
-func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string, error) {
+func (app *App) asanaProjectForADO(ctx context.Context, adoProj string) (string, string, error) {
 	projects, err := app.DB.Projects(ctx)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	for _, p := range projects {
 		if p.ADOProjectName == adoProj {
-			return app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
+			gid, err := app.Asana.ProjectGIDByName(ctx, p.AsanaWorkspaceName, p.AsanaProjectName)
+			return gid, p.AsanaWorkspaceName, err
 		}
 	}
 	log.WithField("project", adoProj).Debug("no project mapping found")
-	return "", nil
+	return "", "", nil
 }
 
-func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) (bool, error) {
+func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj, workspace string, wi azure.WorkItem, name, desc string) (bool, error) {
 	tasks, err := app.Asana.ListProjectTasks(ctx, asanaProj)
 	if err != nil {
 		return false, err
@@ -165,13 +171,14 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 			if err := app.DB.AddTask(ctx, m); err != nil {
 				return false, err
 			}
+			app.addSyncedTag(ctx, workspace, t.GID)
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) error {
+func (app *App) createAndMapTask(ctx context.Context, asanaProj, workspace string, wi azure.WorkItem, name, desc string) error {
 	cf, ok := app.getLinkCustomField(ctx, asanaProj)
 	customFields := map[string]string{}
 	if ok {
@@ -190,6 +197,7 @@ func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure
 	if err != nil {
 		return err
 	}
+	app.addSyncedTag(ctx, workspace, newTask.GID)
 	m := db.TaskMapping{
 		ADOProjectID:     wi.TeamProject,
 		ADOTaskID:        wi.ID,
@@ -201,6 +209,16 @@ func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure
 		UpdatedAt:        time.Now(),
 	}
 	return app.DB.AddTask(ctx, m)
+}
+
+func (app *App) addSyncedTag(ctx context.Context, workspace, taskID string) {
+	tag, ok := app.SyncedTags[workspace]
+	if !ok {
+		return
+	}
+	if err := app.Asana.AddTagToTask(ctx, taskID, tag.GID); err != nil {
+		log.WithError(err).WithFields(log.Fields{"workspace": workspace, "task": taskID}).Warn("failed to add synced tag")
+	}
 }
 
 // getLinkCustomField retrieves the "link" custom field for the specified
@@ -226,4 +244,17 @@ func (app *App) getLinkCustomField(ctx context.Context, projectID string) (asana
 		Value: map[string]interface{}{"gid": cf.GID, "name": cf.Name},
 	})
 	return cf, true
+}
+
+func (app *App) workspaceForADO(ctx context.Context, adoProj string) (string, error) {
+	projects, err := app.DB.Projects(ctx)
+	if err != nil {
+		return "", err
+	}
+	for _, p := range projects {
+		if p.ADOProjectName == adoProj {
+			return p.AsanaWorkspaceName, nil
+		}
+	}
+	return "", nil
 }
