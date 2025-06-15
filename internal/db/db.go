@@ -2,9 +2,12 @@ package db
 
 import (
 	"context"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,6 +24,9 @@ var (
 
 	// Timeout is the default timeout for database operations.
 	Timeout = 10 * time.Second
+
+	// DefaultMaxPoolSize is the default MongoDB connection pool size.
+	DefaultMaxPoolSize uint64 = 100
 )
 
 type DBInterface interface {
@@ -43,6 +49,22 @@ type DB struct {
 	Client *mongo.Client
 }
 
+func getMaxPoolSize() uint64 {
+	v := os.Getenv("MONGO_MAX_POOL_SIZE")
+	if v == "" {
+		return DefaultMaxPoolSize
+	}
+	i, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		logrus.WithError(err).Warn("invalid MONGO_MAX_POOL_SIZE, using default")
+		return DefaultMaxPoolSize
+	}
+	if i == 0 {
+		return DefaultMaxPoolSize
+	}
+	return i
+}
+
 func (db *DB) Connect(ctx context.Context, uri string) error {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.Connect")
 	defer span.End()
@@ -50,7 +72,7 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 	ctx, cancel := context.WithTimeout(ctx, ConnectionTimeout)
 	defer cancel()
 
-	c, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	c, err := mongo.Connect(ctx, clientOptions(uri))
 	if err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
@@ -70,4 +92,8 @@ func (db *DB) Connect(ctx context.Context, uri string) error {
 
 func (db *DB) Disconnect(ctx context.Context) error {
 	return db.Client.Disconnect(ctx)
+}
+
+func clientOptions(uri string) *options.ClientOptions {
+	return options.Client().ApplyURI(uri).SetMaxPoolSize(getMaxPoolSize()).SetRetryReads(true).SetRetryWrites(true)
 }
