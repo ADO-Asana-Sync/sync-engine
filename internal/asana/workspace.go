@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
-	"github.com/range-labs/go-asana/asana"
+	"github.com/qw4n7y/go-asana/asana"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )

@@ -15,6 +15,11 @@ type AsanaInterface interface {
 	Connect(ctx context.Context, pat string)
 	ListWorkspaces(ctx context.Context) ([]Workspace, error)
 	ProjectGIDByName(ctx context.Context, workspaceName, projectName string) (string, error)
+	// CustomFieldByName returns the custom field in the workspace's library
+	// matching the provided name.
+	CustomFieldByName(ctx context.Context, workspaceName, fieldName string) (CustomField, error)
+	// ProjectHasCustomField checks if the given project has a custom field with the provided name.
+	ProjectHasCustomField(ctx context.Context, projectGID, fieldName string) (bool, error)
 	ListProjectTasks(ctx context.Context, projectGID string) ([]Task, error)
 	// CreateTask creates a task in the given project. The notes parameter
 	// should contain HTML wrapped in a <body> element which will be stored as
