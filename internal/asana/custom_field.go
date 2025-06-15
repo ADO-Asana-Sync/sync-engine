@@ -2,7 +2,11 @@ package asana
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
@@ -103,23 +107,51 @@ func (a *Asana) ProjectCustomFieldByName(ctx context.Context, projectGID, fieldN
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	var settings []struct {
-		CustomField CustomField `json:"custom_field"`
+	u := client.BaseURL.ResolveReference(&url.URL{Path: fmt.Sprintf("projects/%s/custom_field_settings", projectGID)})
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return CustomField{}, err
 	}
 
-	if err := client.Request(ctx, fmt.Sprintf("projects/%s/custom_field_settings", projectGID), nil, &settings); err != nil {
+	resp, err := a.Client.Do(req)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return CustomField{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusPaymentRequired {
+		return CustomField{}, fmt.Errorf("custom fields unavailable")
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("asana request failed: %s", string(body))
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return CustomField{}, err
+	}
+
+	var payload struct {
+		Data []struct {
+			CustomField CustomField `json:"custom_field"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
 		span.RecordError(err, trace.WithStackTrace(true))
 		span.SetStatus(codes.Error, err.Error())
 		return CustomField{}, err
 	}
 
 	lname := strings.ToLower(fieldName)
-	for _, s := range settings {
+	for _, s := range payload.Data {
 		if strings.ToLower(s.CustomField.Name) == lname {
 			return s.CustomField, nil
 		}
 	}
-	err := fmt.Errorf("custom field not found")
+	err = fmt.Errorf("custom field not found")
 	span.SetStatus(codes.Error, err.Error())
 	return CustomField{}, err
 }

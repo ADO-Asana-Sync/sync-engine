@@ -159,6 +159,7 @@ func TestAsanaProjectCustomFieldByName(t *testing.T) {
 		CustomField CustomField `json:"custom_field"`
 	}{{CustomField: CustomField{GID: "f1", Name: "Other"}}})
 	badResp := &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader("oops")), Header: make(http.Header)}
+	payResp := &http.Response{StatusCode: http.StatusPaymentRequired, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header)}
 
 	tests := []struct {
 		name      string
@@ -170,6 +171,7 @@ func TestAsanaProjectCustomFieldByName(t *testing.T) {
 	}{
 		{name: "found", resp: foundResp, fieldName: "LINK", want: CustomField{GID: "f1", Name: "Link"}},
 		{name: "missing", resp: missingResp, fieldName: "link", wantErr: true},
+		{name: "payment required", resp: payResp, fieldName: "link", wantErr: true},
 		{name: "api error", resp: badResp, respErr: nil, fieldName: "link", wantErr: true},
 	}
 
