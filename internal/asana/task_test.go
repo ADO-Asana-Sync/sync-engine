@@ -217,3 +217,43 @@ func TestAsanaUpdateTask(t *testing.T) {
 		})
 	}
 }
+
+func TestAsanaCreateTaskWithCustomFields(t *testing.T) {
+	resp := createTaskResponse(asanaapi.Task{GID: "1", Name: "Created"}, nil)
+	var req *http.Request
+	client := testutil.NewTestClientWithRequest(resp, nil, &req)
+	a := &Asana{Client: client}
+	cf := map[string]string{"123": "http://example.com"}
+	got, err := a.CreateTaskWithCustomFields(context.Background(), "42", "Task", "notes", cf)
+	require.NoError(t, err)
+	require.Equal(t, Task{GID: "1", Name: "Created"}, got)
+	require.NotNil(t, req)
+	body, _ := io.ReadAll(req.Body)
+	var payload struct {
+		Data asanaapi.NewTask `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(body, &payload))
+	require.Equal(t, cf, payload.Data.CustomFields)
+	require.Equal(t, "<body>notes</body>", payload.Data.HTMLNotes)
+}
+
+func TestAsanaUpdateTaskWithCustomFields(t *testing.T) {
+	successResp := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header)}
+	var req *http.Request
+	client := testutil.NewTestClientWithRequest(successResp, nil, &req)
+	a := &Asana{Client: client}
+	cf := map[string]string{"123": "http://example.com"}
+	err := a.UpdateTaskWithCustomFields(context.Background(), "1", "name", "notes", cf)
+	require.NoError(t, err)
+	require.NotNil(t, req)
+	body, _ := io.ReadAll(req.Body)
+	var payload struct {
+		Data struct {
+			CustomFields map[string]string `json:"custom_fields"`
+			HTML         string            `json:"html_notes"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(body, &payload))
+	require.Equal(t, cf, payload.Data.CustomFields)
+	require.Equal(t, "<body>notes</body>", payload.Data.HTML)
+}

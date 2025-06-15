@@ -3,6 +3,7 @@ package asana
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	asanaapi "github.com/qw4n7y/go-asana/asana"
@@ -89,4 +90,36 @@ func (a *Asana) ProjectHasCustomField(ctx context.Context, projectGID, fieldName
 		}
 	}
 	return false, nil
+}
+
+// ProjectCustomFieldByName retrieves the custom field matching fieldName from
+// the given project. The name comparison is case-insensitive.
+func (a *Asana) ProjectCustomFieldByName(ctx context.Context, projectGID, fieldName string) (CustomField, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ProjectCustomFieldByName")
+	defer span.End()
+
+	client := asanaapi.NewClient(a.Client)
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	var settings []struct {
+		CustomField CustomField `json:"custom_field"`
+	}
+
+	if err := client.Request(ctx, fmt.Sprintf("projects/%s/custom_field_settings", projectGID), nil, &settings); err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return CustomField{}, err
+	}
+
+	lname := strings.ToLower(fieldName)
+	for _, s := range settings {
+		if strings.ToLower(s.CustomField.Name) == lname {
+			return s.CustomField, nil
+		}
+	}
+	err := fmt.Errorf("custom field not found")
+	span.SetStatus(codes.Error, err.Error())
+	return CustomField{}, err
 }

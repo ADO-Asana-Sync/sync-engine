@@ -111,6 +111,74 @@ func (a *Asana) UpdateTask(ctx context.Context, taskGID, name, notes string) err
 	return nil
 }
 
+// CreateTaskWithCustomFields creates a task and sets the provided custom fields.
+func (a *Asana) CreateTaskWithCustomFields(ctx context.Context, projectGID, name, notes string, customFields map[string]string) (Task, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.CreateTaskWithCustomFields")
+	defer span.End()
+
+	client := asanaapi.NewClient(a.Client)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	notes = ensureHTMLBody(notes)
+
+	body := asanaapi.NewTask{
+		Name:         name,
+		HTMLNotes:    notes,
+		Projects:     []string{projectGID},
+		CustomFields: customFields,
+	}
+
+	t, err := client.CreateTask2(ctx, body, nil)
+	if err != nil {
+		return Task{}, err
+	}
+	return Task{GID: t.GID, Name: t.Name}, nil
+}
+
+// UpdateTaskWithCustomFields updates a task and sets custom field values.
+func (a *Asana) UpdateTaskWithCustomFields(ctx context.Context, taskGID, name, notes string, customFields map[string]string) error {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.UpdateTaskWithCustomFields")
+	defer span.End()
+
+	client := asanaapi.NewClient(a.Client)
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	notes = ensureHTMLBody(notes)
+
+	payload := map[string]map[string]interface{}{
+		"data": {
+			"name":          name,
+			"html_notes":    notes,
+			"custom_fields": customFields,
+		},
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	u := client.BaseURL.ResolveReference(&url.URL{Path: fmt.Sprintf("tasks/%s", taskGID)})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := a.Client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("asana update failed: %s", string(body))
+	}
+	return nil
+}
+
 // ensureHTMLBody wraps the provided notes in a <body> element if one is not already present.
 func ensureHTMLBody(notes string) string {
 	lower := strings.ToLower(notes)

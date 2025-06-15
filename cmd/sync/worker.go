@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/azure"
 	"github.com/ADO-Asana-Sync/sync-engine/internal/db"
 	log "github.com/sirupsen/logrus"
@@ -96,8 +97,20 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 }
 
 func (app *App) updateExistingTask(ctx context.Context, wi azure.WorkItem, mapping db.TaskMapping, name, desc string) error {
-	if err := app.Asana.UpdateTask(ctx, mapping.AsanaTaskID, name, desc); err != nil {
-		return err
+	cf, err := app.Asana.ProjectCustomFieldByName(ctx, mapping.AsanaProjectID, "link")
+	customFields := map[string]string{}
+	if err == nil {
+		customFields[cf.GID] = wi.URL
+	}
+
+	if len(customFields) > 0 {
+		if err := app.Asana.UpdateTaskWithCustomFields(ctx, mapping.AsanaTaskID, name, desc, customFields); err != nil {
+			return err
+		}
+	} else {
+		if err := app.Asana.UpdateTask(ctx, mapping.AsanaTaskID, name, desc); err != nil {
+			return err
+		}
 	}
 	mapping.ADOLastUpdated = wi.ChangedDate
 	mapping.AsanaLastUpdated = time.Now()
@@ -125,8 +138,20 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 	}
 	for _, t := range tasks {
 		if t.Name == name {
-			if err := app.Asana.UpdateTask(ctx, t.GID, name, desc); err != nil {
-				return false, err
+			cf, err := app.Asana.ProjectCustomFieldByName(ctx, asanaProj, "link")
+			customFields := map[string]string{}
+			if err == nil {
+				customFields[cf.GID] = wi.URL
+			}
+
+			if len(customFields) > 0 {
+				if err := app.Asana.UpdateTaskWithCustomFields(ctx, t.GID, name, desc, customFields); err != nil {
+					return false, err
+				}
+			} else {
+				if err := app.Asana.UpdateTask(ctx, t.GID, name, desc); err != nil {
+					return false, err
+				}
 			}
 			m := db.TaskMapping{
 				ADOProjectID:     wi.TeamProject,
@@ -146,7 +171,18 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 }
 
 func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) error {
-	newTask, err := app.Asana.CreateTask(ctx, asanaProj, name, desc)
+	cf, err := app.Asana.ProjectCustomFieldByName(ctx, asanaProj, "link")
+	customFields := map[string]string{}
+	if err == nil {
+		customFields[cf.GID] = wi.URL
+	}
+
+	var newTask asana.Task
+	if len(customFields) > 0 {
+		newTask, err = app.Asana.CreateTaskWithCustomFields(ctx, asanaProj, name, desc, customFields)
+	} else {
+		newTask, err = app.Asana.CreateTask(ctx, asanaProj, name, desc)
+	}
 	if err != nil {
 		return err
 	}
