@@ -61,3 +61,32 @@ func (a *Asana) CustomFieldByName(ctx context.Context, workspaceName, fieldName 
 	span.SetStatus(codes.Error, err.Error())
 	return CustomField{}, err
 }
+
+// ProjectHasCustomField reports whether the given project contains a custom field
+// with the specified name.
+func (a *Asana) ProjectHasCustomField(ctx context.Context, projectGID, fieldName string) (bool, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ProjectHasCustomField")
+	defer span.End()
+
+	client := asanaapi.NewClient(a.Client)
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	var settings []struct {
+		CustomField CustomField `json:"custom_field"`
+	}
+
+	if err := client.Request(ctx, fmt.Sprintf("projects/%s/custom_field_settings", projectGID), nil, &settings); err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return false, err
+	}
+
+	for _, s := range settings {
+		if s.CustomField.Name == fieldName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
