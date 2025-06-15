@@ -64,3 +64,20 @@ func TestGetSleepTimeWithValidSleepTimeHours(t *testing.T) {
 		t.Errorf("Expected sleep time: %v, but got: %v", expected, actual)
 	}
 }
+
+func TestGetCacheTTLDefault(t *testing.T) {
+	os.Unsetenv("PROPERTY_CACHE_TTL")
+	expected := 24 * time.Hour
+	if got := getCacheTTL(); got != expected {
+		t.Errorf("expected %v, got %v", expected, got)
+	}
+}
+
+func TestGetCacheTTLWithEnv(t *testing.T) {
+	os.Setenv("PROPERTY_CACHE_TTL", "12h")
+	defer os.Unsetenv("PROPERTY_CACHE_TTL")
+	expected := 12 * time.Hour
+	if got := getCacheTTL(); got != expected {
+		t.Errorf("expected %v, got %v", expected, got)
+	}
+}

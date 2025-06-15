@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/asana"
@@ -97,9 +98,9 @@ func (app *App) prepWorkItem(ctx context.Context, id int) (*db.TaskMapping, azur
 }
 
 func (app *App) updateExistingTask(ctx context.Context, wi azure.WorkItem, mapping db.TaskMapping, name, desc string) error {
-	cf, err := app.Asana.ProjectCustomFieldByName(ctx, mapping.AsanaProjectID, "link")
+	cf, ok := app.getLinkCustomField(ctx, mapping.AsanaProjectID)
 	customFields := map[string]string{}
-	if err == nil {
+	if ok {
 		customFields[cf.GID] = wi.URL
 	}
 
@@ -138,9 +139,9 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 	}
 	for _, t := range tasks {
 		if t.Name == name {
-			cf, err := app.Asana.ProjectCustomFieldByName(ctx, asanaProj, "link")
+			cf, ok := app.getLinkCustomField(ctx, asanaProj)
 			customFields := map[string]string{}
-			if err == nil {
+			if ok {
 				customFields[cf.GID] = wi.URL
 			}
 
@@ -171,13 +172,16 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj string
 }
 
 func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure.WorkItem, name, desc string) error {
-	cf, err := app.Asana.ProjectCustomFieldByName(ctx, asanaProj, "link")
+	cf, ok := app.getLinkCustomField(ctx, asanaProj)
 	customFields := map[string]string{}
-	if err == nil {
+	if ok {
 		customFields[cf.GID] = wi.URL
 	}
 
-	var newTask asana.Task
+	var (
+		newTask asana.Task
+		err     error
+	)
 	if len(customFields) > 0 {
 		newTask, err = app.Asana.CreateTaskWithCustomFields(ctx, asanaProj, name, desc, customFields)
 	} else {
@@ -197,4 +201,29 @@ func (app *App) createAndMapTask(ctx context.Context, asanaProj string, wi azure
 		UpdatedAt:        time.Now(),
 	}
 	return app.DB.AddTask(ctx, m)
+}
+
+// getLinkCustomField retrieves the "link" custom field for the specified
+// project, using a cached value when available. The boolean return indicates
+// whether the field was found.
+func (app *App) getLinkCustomField(ctx context.Context, projectID string) (asana.CustomField, bool) {
+	key := fmt.Sprintf("project:%s:link_field", projectID)
+	item, err := app.DB.GetCacheItem(ctx, key)
+	if err == nil && time.Since(item.UpdatedAt) < app.CacheTTL {
+		gid, _ := item.Value["gid"].(string)
+		name, _ := item.Value["name"].(string)
+		if gid != "" {
+			return asana.CustomField{GID: gid, Name: name}, true
+		}
+	}
+
+	cf, err := app.Asana.ProjectCustomFieldByName(ctx, projectID, "link")
+	if err != nil {
+		return asana.CustomField{}, false
+	}
+	_ = app.DB.UpsertCacheItem(ctx, db.CacheItem{
+		Key:   key,
+		Value: map[string]interface{}{"gid": cf.GID, "name": cf.Name},
+	})
+	return cf, true
 }

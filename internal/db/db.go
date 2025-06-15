@@ -35,6 +35,8 @@ type DBInterface interface {
 	TaskByADOTaskID(ctx context.Context, id int) (TaskMapping, error)
 	AddTask(ctx context.Context, task TaskMapping) error
 	UpdateTask(ctx context.Context, task TaskMapping) error
+	GetCacheItem(ctx context.Context, key string) (CacheItem, error)
+	UpsertCacheItem(ctx context.Context, item CacheItem) error
 }
 
 type DB struct {

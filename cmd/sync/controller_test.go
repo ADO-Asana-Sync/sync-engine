@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -31,6 +32,10 @@ func (m *mockDB) TaskByADOTaskID(ctx context.Context, id int) (db.TaskMapping, e
 }
 func (m *mockDB) AddTask(ctx context.Context, task db.TaskMapping) error    { return nil }
 func (m *mockDB) UpdateTask(ctx context.Context, task db.TaskMapping) error { return nil }
+func (m *mockDB) GetCacheItem(ctx context.Context, key string) (db.CacheItem, error) {
+	return db.CacheItem{}, fmt.Errorf("not found")
+}
+func (m *mockDB) UpsertCacheItem(ctx context.Context, item db.CacheItem) error { return nil }
 
 type mockAzure struct{}
 
