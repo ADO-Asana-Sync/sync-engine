@@ -144,38 +144,48 @@ func (app *App) tryUpdateExistingAsanaTask(ctx context.Context, asanaProj, works
 		return false, err
 	}
 	for _, t := range tasks {
-		if t.Name == name {
-			cf, ok := app.getLinkCustomField(ctx, asanaProj)
-			customFields := map[string]string{}
-			if ok {
-				customFields[cf.GID] = wi.URL
-			}
-
-			if len(customFields) > 0 {
-				if err := app.Asana.UpdateTaskWithCustomFields(ctx, t.GID, name, desc, customFields); err != nil {
-					return false, err
-				}
-			} else {
-				if err := app.Asana.UpdateTask(ctx, t.GID, name, desc); err != nil {
-					return false, err
-				}
-			}
-			m := db.TaskMapping{
-				ADOProjectID:     wi.TeamProject,
-				ADOTaskID:        wi.ID,
-				ADOLastUpdated:   wi.ChangedDate,
-				AsanaProjectID:   asanaProj,
-				AsanaTaskID:      t.GID,
-				AsanaLastUpdated: time.Now(),
-			}
-			if err := app.DB.AddTask(ctx, m); err != nil {
-				return false, err
-			}
-			app.addSyncedTag(ctx, workspace, t.GID)
-			return true, nil
+		if t.Name != name {
+			continue
 		}
+		if err := app.updateExistingByName(ctx, t.GID, asanaProj, workspace, wi, name, desc); err != nil {
+			return false, err
+		}
+		return true, nil
 	}
 	return false, nil
+}
+
+// updateExistingByName updates an Asana task and records a new mapping entry.
+func (app *App) updateExistingByName(ctx context.Context, taskID, projectID, workspace string, wi azure.WorkItem, name, desc string) error {
+	cf, ok := app.getLinkCustomField(ctx, projectID)
+	customFields := map[string]string{}
+	if ok {
+		customFields[cf.GID] = wi.URL
+	}
+
+	var err error
+	if len(customFields) > 0 {
+		err = app.Asana.UpdateTaskWithCustomFields(ctx, taskID, name, desc, customFields)
+	} else {
+		err = app.Asana.UpdateTask(ctx, taskID, name, desc)
+	}
+	if err != nil {
+		return err
+	}
+
+	m := db.TaskMapping{
+		ADOProjectID:     wi.TeamProject,
+		ADOTaskID:        wi.ID,
+		ADOLastUpdated:   wi.ChangedDate,
+		AsanaProjectID:   projectID,
+		AsanaTaskID:      taskID,
+		AsanaLastUpdated: time.Now(),
+	}
+	if err := app.DB.AddTask(ctx, m); err != nil {
+		return err
+	}
+	app.addSyncedTag(ctx, workspace, taskID)
+	return nil
 }
 
 func (app *App) createAndMapTask(ctx context.Context, asanaProj, workspace string, wi azure.WorkItem, name, desc string) error {
