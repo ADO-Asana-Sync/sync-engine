@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	asanaapi "github.com/qw4n7y/go-asana/asana"
@@ -56,13 +57,34 @@ func (a *Asana) TagByName(ctx context.Context, workspaceName, tagName string) (T
 		return Tag{}, err
 	}
 
+	var (
+		foundTag Tag
+		minID    int64 = 1<<63 - 1
+	)
 	for _, t := range tags {
-		if t.Name == tagName {
-			if t.GID != "" {
-				return Tag{GID: t.GID, Name: t.Name}, nil
-			}
-			return Tag{GID: fmt.Sprint(t.ID), Name: t.Name}, nil
+		if t.Name != tagName {
+			continue
 		}
+		var id int64
+		if t.GID != "" {
+			if v, err := strconv.ParseInt(t.GID, 10, 64); err == nil {
+				id = v
+			}
+		}
+		if id == 0 {
+			id = t.ID
+		}
+		if id < minID {
+			minID = id
+			if t.GID != "" {
+				foundTag = Tag{GID: t.GID, Name: t.Name}
+			} else {
+				foundTag = Tag{GID: fmt.Sprint(t.ID), Name: t.Name}
+			}
+		}
+	}
+	if foundTag.GID != "" {
+		return foundTag, nil
 	}
 	err = fmt.Errorf("tag not found")
 	span.SetStatus(codes.Error, err.Error())

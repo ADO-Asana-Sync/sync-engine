@@ -27,8 +27,6 @@ func createTagListResponse(tags []asanaapi.Tag, respErr asanaapi.Errors) *http.R
 }
 
 func TestAsanaTagByName(t *testing.T) {
-	wsResp := createWorkspaceResponse([]asanaapi.Workspace{{ID: 1, Name: "Acme"}}, nil)
-	tagResp := createTagListResponse([]asanaapi.Tag{{GID: "1", Name: "synced"}}, nil)
 	badResp := &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader("oops")), Header: make(http.Header)}
 
 	tests := []struct {
@@ -41,10 +39,11 @@ func TestAsanaTagByName(t *testing.T) {
 		want          Tag
 		wantErr       bool
 	}{
-		{name: "found", wsResp: wsResp, tagResp: tagResp, workspaceName: "Acme", tagName: "synced", want: Tag{GID: "1", Name: "synced"}},
-		{name: "workspace not found", wsResp: createWorkspaceResponse([]asanaapi.Workspace{}, nil), tagResp: tagResp, workspaceName: "Missing", tagName: "synced", wantErr: true},
-		{name: "tag missing", wsResp: wsResp, tagResp: createTagListResponse([]asanaapi.Tag{}, nil), workspaceName: "Acme", tagName: "synced", wantErr: true},
-		{name: "api error", wsResp: wsResp, tagResp: badResp, workspaceName: "Acme", tagName: "synced", wantErr: true},
+		{name: "found", wsResp: createWorkspaceResponse([]asanaapi.Workspace{{ID: 1, Name: "Acme"}}, nil), tagResp: createTagListResponse([]asanaapi.Tag{{GID: "1", Name: "synced"}}, nil), workspaceName: "Acme", tagName: "synced", want: Tag{GID: "1", Name: "synced"}},
+		{name: "lowest gid", wsResp: createWorkspaceResponse([]asanaapi.Workspace{{ID: 1, Name: "Acme"}}, nil), tagResp: createTagListResponse([]asanaapi.Tag{{GID: "2", Name: "synced"}, {GID: "1", Name: "synced"}}, nil), workspaceName: "Acme", tagName: "synced", want: Tag{GID: "1", Name: "synced"}},
+		{name: "workspace not found", wsResp: createWorkspaceResponse([]asanaapi.Workspace{}, nil), tagResp: createTagListResponse([]asanaapi.Tag{{GID: "1", Name: "synced"}}, nil), workspaceName: "Missing", tagName: "synced", wantErr: true},
+		{name: "tag missing", wsResp: createWorkspaceResponse([]asanaapi.Workspace{{ID: 1, Name: "Acme"}}, nil), tagResp: createTagListResponse([]asanaapi.Tag{}, nil), workspaceName: "Acme", tagName: "synced", wantErr: true},
+		{name: "api error", wsResp: createWorkspaceResponse([]asanaapi.Workspace{{ID: 1, Name: "Acme"}}, nil), tagResp: badResp, workspaceName: "Acme", tagName: "synced", wantErr: true},
 	}
 
 	for _, tt := range tests {

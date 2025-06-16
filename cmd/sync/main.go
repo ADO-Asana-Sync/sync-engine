@@ -31,8 +31,7 @@ type App struct {
 	Azure           azure.AzureInterface
 	DB              db.DBInterface
 	CacheTTL        time.Duration
-	Workspace       string
-	SyncedTag       asana.Tag
+	SyncedTags      map[string]asana.Tag
 	Tracer          trace.Tracer
 	UptraceShutdown func(ctx context.Context) error
 }
@@ -162,42 +161,28 @@ func (app *App) setup(ctx context.Context) error {
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
 	app.CacheTTL = getCacheTTL()
-	app.loadSyncedTag(ctx)
+	app.SyncedTags = make(map[string]asana.Tag)
+	app.loadSyncedTags(ctx)
 
 	return nil
 }
 
-func (app *App) loadSyncedTag(ctx context.Context) {
+func (app *App) loadSyncedTags(ctx context.Context) {
 	projects, err := app.DB.Projects(ctx)
 	if err != nil {
 		log.WithError(err).Warn("unable to load projects for tag lookup")
 		return
 	}
-	if len(projects) == 0 {
-		return
-	}
-	ws := projects[0].AsanaWorkspaceName
+	seen := make(map[string]bool)
 	for _, p := range projects {
-		if p.AsanaWorkspaceName != ws {
-			log.WithField("workspace", p.AsanaWorkspaceName).Warn("multiple workspaces configured; using first")
+		ws := p.AsanaWorkspaceName
+		if seen[ws] {
+			continue
+		}
+		seen[ws] = true
+		rec, err := app.DB.WorkspaceTag(ctx, ws)
+		if err == nil && rec.GID != "" {
+			app.SyncedTags[ws] = asana.Tag{GID: rec.GID, Name: rec.Name}
 		}
 	}
-	app.Workspace = ws
-	key := fmt.Sprintf("workspace:%s:synced_tag", ws)
-	item, err := app.DB.GetCacheItem(ctx, key)
-	if err == nil && time.Since(item.UpdatedAt) < app.CacheTTL {
-		gid, _ := item.Value["gid"].(string)
-		name, _ := item.Value["name"].(string)
-		if gid != "" {
-			app.SyncedTag = asana.Tag{GID: gid, Name: name}
-			return
-		}
-	}
-	tag, err := app.Asana.TagByName(ctx, ws, "synced")
-	if err != nil {
-		log.WithError(err).WithField("workspace", ws).Warn("synced tag not found")
-		return
-	}
-	_ = app.DB.UpsertCacheItem(ctx, db.CacheItem{Key: key, Value: map[string]interface{}{"gid": tag.GID, "name": tag.Name}})
-	app.SyncedTag = tag
 }
