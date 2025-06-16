@@ -204,21 +204,24 @@ func (app *App) createAndMapTask(ctx context.Context, asanaProj, workspace strin
 	} else {
 		newTask, err = app.Asana.CreateTask(ctx, asanaProj, name, desc)
 	}
-	if err != nil {
-		return err
-	}
-	app.addSyncedTag(ctx, workspace, newTask.GID)
-	m := db.TaskMapping{
-		ADOProjectID:     wi.TeamProject,
-		ADOTaskID:        wi.ID,
-		ADOLastUpdated:   wi.ChangedDate,
-		AsanaProjectID:   asanaProj,
-		AsanaTaskID:      newTask.GID,
-		AsanaLastUpdated: time.Now(),
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	}
-	return app.DB.AddTask(ctx, m)
+       if err != nil {
+               return err
+       }
+       m := db.TaskMapping{
+                ADOProjectID:     wi.TeamProject,
+                ADOTaskID:        wi.ID,
+                ADOLastUpdated:   wi.ChangedDate,
+                AsanaProjectID:   asanaProj,
+                AsanaTaskID:      newTask.GID,
+                AsanaLastUpdated: time.Now(),
+                CreatedAt:        time.Now(),
+                UpdatedAt:        time.Now(),
+       }
+       if err := app.DB.AddTask(ctx, m); err != nil {
+               return err
+       }
+       app.addSyncedTag(ctx, workspace, newTask.GID)
+       return nil
 }
 
 func (app *App) addSyncedTag(ctx context.Context, workspace, taskID string) {
