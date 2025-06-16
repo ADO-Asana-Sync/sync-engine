@@ -43,6 +43,8 @@ type DBInterface interface {
 	UpdateTask(ctx context.Context, task TaskMapping) error
 	GetCacheItem(ctx context.Context, key string) (CacheItem, error)
 	UpsertCacheItem(ctx context.Context, item CacheItem) error
+	WorkspaceTag(ctx context.Context, workspaceName string) (WorkspaceTag, error)
+	UpsertWorkspaceTag(ctx context.Context, tag WorkspaceTag) error
 }
 
 type DB struct {

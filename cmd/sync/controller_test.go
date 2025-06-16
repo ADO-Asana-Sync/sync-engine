@@ -36,6 +36,10 @@ func (m *mockDB) GetCacheItem(ctx context.Context, key string) (db.CacheItem, er
 	return db.CacheItem{}, fmt.Errorf("not found")
 }
 func (m *mockDB) UpsertCacheItem(ctx context.Context, item db.CacheItem) error { return nil }
+func (m *mockDB) WorkspaceTag(ctx context.Context, workspaceName string) (db.WorkspaceTag, error) {
+	return db.WorkspaceTag{}, fmt.Errorf("not found")
+}
+func (m *mockDB) UpsertWorkspaceTag(ctx context.Context, tag db.WorkspaceTag) error { return nil }
 
 type mockAzure struct{}
 

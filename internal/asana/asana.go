@@ -36,6 +36,10 @@ type AsanaInterface interface {
 	CreateTaskWithCustomFields(ctx context.Context, projectGID, name, notes string, customFields map[string]string) (Task, error)
 	// UpdateTaskWithCustomFields updates a task and sets custom field values.
 	UpdateTaskWithCustomFields(ctx context.Context, taskGID, name, notes string, customFields map[string]string) error
+	// TagByName returns the tag with the specified name in the workspace.
+	TagByName(ctx context.Context, workspaceName, tagName string) (Tag, error)
+	// AddTagToTask adds a tag to the specified task.
+	AddTagToTask(ctx context.Context, taskGID, tagGID string) error
 }
 
 type Asana struct {
