@@ -31,6 +31,7 @@ type App struct {
 	Azure           azure.AzureInterface
 	DB              db.DBInterface
 	CacheTTL        time.Duration
+	SyncedTags      map[string]asana.Tag
 	Tracer          trace.Tracer
 	UptraceShutdown func(ctx context.Context) error
 }
@@ -160,6 +161,28 @@ func (app *App) setup(ctx context.Context) error {
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
 	app.CacheTTL = getCacheTTL()
+	app.SyncedTags = make(map[string]asana.Tag)
+	app.loadSyncedTags(ctx)
 
 	return nil
+}
+
+func (app *App) loadSyncedTags(ctx context.Context) {
+	projects, err := app.DB.Projects(ctx)
+	if err != nil {
+		log.WithError(err).Warn("unable to load projects for tag lookup")
+		return
+	}
+	seen := make(map[string]bool)
+	for _, p := range projects {
+		ws := p.AsanaWorkspaceName
+		if seen[ws] {
+			continue
+		}
+		seen[ws] = true
+		rec, err := app.DB.WorkspaceTag(ctx, ws)
+		if err == nil && rec.GID != "" {
+			app.SyncedTags[ws] = asana.Tag{GID: rec.GID, Name: rec.Name}
+		}
+	}
 }
