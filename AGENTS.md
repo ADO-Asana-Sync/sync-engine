@@ -61,6 +61,7 @@ When working on this codebase, agents should focus on implementing the following
 4. **Tracing**: Instrument code with OpenTelemetry for observability
 5. **Testing**: Write unit tests for all core functionality
 6. **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
+7. **Complexity Scanning**: Scan the code with gocognit and keep the complexity below 15 where possible
 
 ## Synchronization Logic
 
