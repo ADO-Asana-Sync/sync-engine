@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -22,6 +23,43 @@ type Tag struct {
 	Name string `json:"name"`
 }
 
+func workspaceIDByName(workspaces []Workspace, name string) (int64, bool) {
+	for _, ws := range workspaces {
+		if ws.Name == name {
+			return ws.ID, true
+		}
+	}
+	return 0, false
+}
+
+func pickTagByName(tags []asanaapi.Tag, name string) (Tag, bool) {
+	var (
+		chosen Tag
+		minID  int64 = math.MaxInt64
+	)
+	for _, t := range tags {
+		if t.Name != name {
+			continue
+		}
+		id, _ := strconv.ParseInt(t.GID, 10, 64)
+		if id == 0 {
+			id = t.ID
+		}
+		if id < minID {
+			minID = id
+			if t.GID != "" {
+				chosen = Tag{GID: t.GID, Name: t.Name}
+			} else {
+				chosen = Tag{GID: fmt.Sprint(t.ID), Name: t.Name}
+			}
+		}
+	}
+	if minID != math.MaxInt64 {
+		return chosen, true
+	}
+	return Tag{}, false
+}
+
 // TagByName finds a tag in the given workspace by its name.
 func (a *Asana) TagByName(ctx context.Context, workspaceName, tagName string) (Tag, error) {
 	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.TagByName")
@@ -31,16 +69,9 @@ func (a *Asana) TagByName(ctx context.Context, workspaceName, tagName string) (T
 	if err != nil {
 		return Tag{}, err
 	}
-	var wsID int64
-	found := false
-	for _, ws := range workspaces {
-		if ws.Name == workspaceName {
-			wsID = ws.ID
-			found = true
-			break
-		}
-	}
-	if !found {
+
+	wsID, ok := workspaceIDByName(workspaces, workspaceName)
+	if !ok {
 		err := fmt.Errorf("workspace not found")
 		span.SetStatus(codes.Error, err.Error())
 		return Tag{}, err
@@ -57,38 +88,13 @@ func (a *Asana) TagByName(ctx context.Context, workspaceName, tagName string) (T
 		return Tag{}, err
 	}
 
-	var (
-		foundTag Tag
-		minID    int64 = 1<<63 - 1
-	)
-	for _, t := range tags {
-		if t.Name != tagName {
-			continue
-		}
-		var id int64
-		if t.GID != "" {
-			if v, err := strconv.ParseInt(t.GID, 10, 64); err == nil {
-				id = v
-			}
-		}
-		if id == 0 {
-			id = t.ID
-		}
-		if id < minID {
-			minID = id
-			if t.GID != "" {
-				foundTag = Tag{GID: t.GID, Name: t.Name}
-			} else {
-				foundTag = Tag{GID: fmt.Sprint(t.ID), Name: t.Name}
-			}
-		}
+	tag, ok := pickTagByName(tags, tagName)
+	if !ok {
+		err := fmt.Errorf("tag not found")
+		span.SetStatus(codes.Error, err.Error())
+		return Tag{}, err
 	}
-	if foundTag.GID != "" {
-		return foundTag, nil
-	}
-	err = fmt.Errorf("tag not found")
-	span.SetStatus(codes.Error, err.Error())
-	return Tag{}, err
+	return tag, nil
 }
 
 // AddTagToTask adds a tag to the specified task.
