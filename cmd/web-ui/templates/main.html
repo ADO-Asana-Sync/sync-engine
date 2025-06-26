@@ -5,18 +5,19 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{ .Title }} | ADO Asana Sync Manager</title>
-	<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-	<link href="/static/css/web-ui.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="/static/css/web-ui.css" rel="stylesheet">
 	<link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
 	<link rel="manifest" href="/static/site.webmanifest">
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
 	<!-- Header -->
-	<header class="bg-blue-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md">
+        <header class="bg-blue-600 p-4 text-white fixed w-full top-0 left-0 z-10 shadow-md dark:bg-blue-700">
 		<div class="container flex justify-between items-center">
 			<div class="flex items-center ml-4">
 				<a href="/" class="flex items-center text-lg font-bold">
@@ -24,15 +25,17 @@
 					ADO Asana Sync Manager
 				</a>
 			</div>
-			<nav>
-				<!-- Add navigation links if needed -->
-			</nav>
-		</div>
+                        <nav class="flex items-center">
+                                <button id="dark-mode-toggle" class="ml-4 text-white rounded hover:bg-blue-500 p-2" aria-label="Toggle dark mode">
+                                        <span class="material-icons">dark_mode</span>
+                                </button>
+                        </nav>
+                </div>
 	</header>
 	<!-- Page Content -->
 	<div class="flex flex-row min-h-screen pt-16">
 		<!-- Sidebar -->
-		<aside class="w-64 bg-gray-800 text-white fixed h-full shadow-lg">
+                <aside class="w-64 bg-gray-800 text-white fixed h-full shadow-lg dark:bg-gray-800/80">
 			<ul>
 				<li class="sidebar"><a href="/"
 						class="block p-4 {{if eq .CurrentPage `home`}}active{{else}}hover:text-white{{end}}">Dashboard</a>
@@ -43,10 +46,36 @@
 			</ul>
 		</aside>
 		<!-- Main Content -->
-		<div class="flex-1 p-10 text-xl font-medium pl-72 bg-white shadow-md rounded-lg">
-			{{ template "content" . }}
-		</div>
-	</div>
+                <div class="flex-1 p-10 text-xl font-medium pl-72 bg-white shadow-md rounded-lg dark:bg-gray-700/40">
+                        {{ template "content" . }}
+                </div>
+        </div>
+        <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                        const toggle = document.getElementById('dark-mode-toggle');
+                        const root = document.documentElement;
+                        function setMode(dark) {
+                                if (dark) {
+                                        root.classList.add('dark');
+                                        toggle.innerText = 'light_mode';
+                                        localStorage.setItem('theme', 'dark');
+                                } else {
+                                        root.classList.remove('dark');
+                                        toggle.innerText = 'dark_mode';
+                                        localStorage.setItem('theme', 'light');
+                                }
+                        }
+                        const saved = localStorage.getItem('theme');
+                        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                                setMode(true);
+                        } else {
+                                setMode(false);
+                        }
+                        toggle.addEventListener('click', () => {
+                                setMode(!root.classList.contains('dark'));
+                        });
+                });
+        </script>
 </body>
 
 </html>
