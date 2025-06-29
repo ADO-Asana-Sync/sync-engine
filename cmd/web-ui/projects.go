@@ -193,3 +193,64 @@ func editProjectHandler(app *App, c *gin.Context) {
 	}
 	c.Redirect(http.StatusSeeOther, "/projects")
 }
+
+func adoProjectsHandler(app *App, c *gin.Context) {
+	ctx, span := app.Tracer.Start(c.Request.Context(), "projects.adoProjectsHandler")
+	defer span.End()
+
+	projs, err := app.Azure.GetProjects(ctx)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to fetch ADO projects"})
+		return
+	}
+	var names []string
+	for _, p := range projs {
+		if p.Name != nil {
+			names = append(names, *p.Name)
+		}
+	}
+	sort.Strings(names)
+	c.JSON(http.StatusOK, names)
+}
+
+func asanaWorkspacesHandler(app *App, c *gin.Context) {
+	ctx, span := app.Tracer.Start(c.Request.Context(), "projects.asanaWorkspacesHandler")
+	defer span.End()
+
+	wss, err := app.Asana.ListWorkspaces(ctx)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to fetch workspaces"})
+		return
+	}
+	var names []string
+	for _, ws := range wss {
+		names = append(names, ws.Name)
+	}
+	sort.Strings(names)
+	c.JSON(http.StatusOK, names)
+}
+
+func asanaProjectsHandler(app *App, c *gin.Context) {
+	ctx, span := app.Tracer.Start(c.Request.Context(), "projects.asanaProjectsHandler")
+	defer span.End()
+
+	workspace := c.Query("workspace")
+	if workspace == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace required"})
+		return
+	}
+	projs, err := app.Asana.ListProjects(ctx, workspace)
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to fetch projects"})
+		return
+	}
+	var names []string
+	for _, p := range projs {
+		names = append(names, p.Name)
+	}
+	sort.Strings(names)
+	c.JSON(http.StatusOK, names)
+}

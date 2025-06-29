@@ -25,16 +25,13 @@
             <!-- Add Project Form Row -->
             <tr id="add-project-form-row" class="d-none">
                 <td class="text-end">
-                    <input type="text" name="ado_project_name" form="add-project-form" class="form-control"
-                        placeholder="ADO Project Name" required>
+                    <select name="ado_project_name" id="add-ado-project-name" form="add-project-form" class="form-select" required></select>
                 </td>
                 <td class="text-end">
-                    <input type="text" name="asana_workspace_name" form="add-project-form" class="form-control"
-                        placeholder="Asana Workspace Name" required>
+                    <select name="asana_workspace_name" id="add-asana-workspace-name" form="add-project-form" class="form-select" required></select>
                 </td>
                 <td>
-                    <input type="text" name="asana_project_name" form="add-project-form" class="form-control"
-                        placeholder="Asana Project Name" required>
+                    <select name="asana_project_name" id="add-asana-project-name" form="add-project-form" class="form-select" required></select>
                 </td>
                 <td>
                     <form id="add-project-form" method="POST" action="/add-project" class="d-flex">
@@ -50,16 +47,13 @@
             <!-- Update Project Form Row -->
             <tr id="update-project-form-row" class="d-none">
                 <td class="text-end">
-                    <input type="text" name="ado_project_name" id="update-ado-project-name" form="update-project-form"
-                        class="form-control" placeholder="ADO Project Name" required>
+                    <select name="ado_project_name" id="update-ado-project-name" form="update-project-form" class="form-select" required></select>
                 </td>
                 <td class="text-end">
-                    <input type="text" name="asana_workspace_name" id="update-asana-workspace-name"
-                        form="update-project-form" class="form-control" placeholder="Asana Workspace Name" required>
+                    <select name="asana_workspace_name" id="update-asana-workspace-name" form="update-project-form" class="form-select" required></select>
                 </td>
                 <td>
-                    <input type="text" name="asana_project_name" id="update-asana-project-name"
-                        form="update-project-form" class="form-control" placeholder="Asana Project Name" required>
+                    <select name="asana_project_name" id="update-asana-project-name" form="update-project-form" class="form-select" required></select>
                 </td>
                 <td>
                     <form id="update-project-form" action="/update-project"
@@ -97,9 +91,39 @@
     </table>
 </div>
 <script>
-    document.getElementById('add-project-btn').addEventListener('click', function () {
+    async function populateSelect(select, values, selected) {
+        select.innerHTML = '';
+        values.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v;
+            if (v === selected) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    async function loadAddForm() {
+        const ado = await fetch('/ado-projects').then(r => r.json());
+        const work = await fetch('/asana-workspaces').then(r => r.json());
+        await populateSelect(document.getElementById('add-ado-project-name'), ado);
+        await populateSelect(document.getElementById('add-asana-workspace-name'), work);
+        if (work.length > 0) {
+            await loadAsanaProjects(work[0], 'add-asana-project-name');
+        }
+    }
+
+    async function loadAsanaProjects(workspace, targetId) {
+        const projs = await fetch(`/asana-projects?workspace=${encodeURIComponent(workspace)}`).then(r => r.json());
+        await populateSelect(document.getElementById(targetId), projs);
+    }
+
+    document.getElementById('add-project-btn').addEventListener('click', async function () {
         document.getElementById('update-project-form-row').classList.add('d-none');
-        document.getElementById('add-project-form-row').classList.toggle('d-none');
+        const row = document.getElementById('add-project-form-row');
+        row.classList.toggle('d-none');
+        if (!row.classList.contains('d-none')) {
+            await loadAddForm();
+        }
     });
 
     document.getElementById('cancel-add-btn').addEventListener('click', function () {
@@ -107,7 +131,7 @@
     });
 
     document.querySelectorAll('.edit-btn').forEach(button => {
-        button.addEventListener('click', function () {
+        button.addEventListener('click', async function () {
             document.getElementById('add-project-form-row').classList.add('d-none');
             const row = this.closest('tr');
             const adoProjectName = row.cells[0].innerText.trim();
@@ -115,12 +139,23 @@
             const asanaProjectName = row.cells[2].innerText.trim();
             const projectId = this.getAttribute('data-id');
 
-            document.getElementById('update-project-id').value = projectId;
-            document.getElementById('update-ado-project-name').value = adoProjectName;
-            document.getElementById('update-asana-workspace-name').value = asanaWorkspaceName;
+            const ado = await fetch('/ado-projects').then(r => r.json());
+            const work = await fetch('/asana-workspaces').then(r => r.json());
+            await populateSelect(document.getElementById('update-ado-project-name'), ado, adoProjectName);
+            await populateSelect(document.getElementById('update-asana-workspace-name'), work, asanaWorkspaceName);
+            await loadAsanaProjects(asanaWorkspaceName, 'update-asana-project-name');
             document.getElementById('update-asana-project-name').value = asanaProjectName;
+            document.getElementById('update-project-id').value = projectId;
             document.getElementById('update-project-form-row').classList.remove('d-none');
         });
+    });
+
+    document.getElementById('add-asana-workspace-name').addEventListener('change', function () {
+        loadAsanaProjects(this.value, 'add-asana-project-name');
+    });
+
+    document.getElementById('update-asana-workspace-name').addEventListener('change', function () {
+        loadAsanaProjects(this.value, 'update-asana-project-name');
     });
 
     document.getElementById('cancel-update-btn').addEventListener('click', function () {
