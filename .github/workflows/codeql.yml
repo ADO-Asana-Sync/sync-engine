@@ -44,7 +44,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
         with:
-          go-version: ^1.22
+          go-version: ^1.24
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -65,6 +65,17 @@ jobs:
       - name: Version with GitVersion # https://github.com/marketplace/actions/use-actions
         id: gitversion
         uses: gittools/actions/gitversion/execute@v3.2.1
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install dependencies
+        run: go mod download
       - name: Build sync
         run: go build -v -ldflags "-s -w" -o ${{ github.workspace }}/staging/sync ./cmd/sync
 
