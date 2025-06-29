@@ -14,6 +14,8 @@ import (
 type AsanaInterface interface {
 	Connect(ctx context.Context, pat string)
 	ListWorkspaces(ctx context.Context) ([]Workspace, error)
+	// ListProjects returns the projects in the given workspace.
+	ListProjects(ctx context.Context, workspaceName string) ([]Project, error)
 	ProjectGIDByName(ctx context.Context, workspaceName, projectName string) (string, error)
 	// CustomFieldByName returns the custom field in the workspace's library
 	// matching the provided name.

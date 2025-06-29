@@ -30,4 +30,15 @@ func registerRoutes(router *gin.Engine, app *App) {
 	router.PUT("/update-project", func(c *gin.Context) {
 		editProjectHandler(app, c)
 	})
+
+	// API routes for project selection.
+	router.GET("/ado-projects", func(c *gin.Context) {
+		adoProjectsHandler(app, c)
+	})
+	router.GET("/asana-workspaces", func(c *gin.Context) {
+		asanaWorkspacesHandler(app, c)
+	})
+	router.GET("/asana-projects", func(c *gin.Context) {
+		asanaProjectsHandler(app, c)
+	})
 }
