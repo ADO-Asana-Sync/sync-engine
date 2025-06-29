@@ -113,7 +113,7 @@ func (db *DB) EnsureIndexes(ctx context.Context) error {
 
 	coll := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 	_, err := coll.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    bson.D{{Key: "ado_project_name", Value: 1}},
+		Keys:    bson.D{bson.E{Key: "ado_project_name", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
 	if err != nil {
