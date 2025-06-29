@@ -38,11 +38,11 @@
                 </td>
                 <td>
                     <form id="add-project-form" method="POST" action="/add-project" class="d-flex">
-                        <button type="submit" class="btn btn-success me-2" title="Add Project">
-                            <i class="bi bi-check-lg"></i>
+                        <button type="submit" class="btn btn-success me-2" aria-label="Confirm add project">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="btn btn-secondary" id="cancel-add-btn" title="Cancel">
-                            <i class="bi bi-x-lg"></i>
+                        <button type="button" class="btn btn-secondary" id="cancel-add-btn" aria-label="Cancel add project">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
                         </button>
                     </form>
                 </td>
@@ -62,14 +62,14 @@
                         form="update-project-form" class="form-control" placeholder="Asana Project Name" required>
                 </td>
                 <td>
-                    <form id="update-project-form" method="POST" action="/update-project"
+                    <form id="update-project-form" action="/update-project"
                         onsubmit="event.preventDefault(); updateProject();" class="d-flex">
                         <input type="hidden" name="id" id="update-project-id">
-                        <button type="submit" class="btn btn-success me-2" title="Update Project">
-                            <i class="bi bi-check-lg"></i>
+                        <button type="submit" class="btn btn-success me-2" aria-label="Confirm update project">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="btn btn-secondary" id="cancel-update-btn" title="Cancel">
-                            <i class="bi bi-x-lg"></i>
+                        <button type="button" class="btn btn-secondary" id="cancel-update-btn" aria-label="Cancel update project">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
                         </button>
                     </form>
                 </td>
@@ -98,7 +98,8 @@
 </div>
 <script>
     document.getElementById('add-project-btn').addEventListener('click', function () {
-        document.getElementById('add-project-form-row').classList.remove('d-none');
+        document.getElementById('update-project-form-row').classList.add('d-none');
+        document.getElementById('add-project-form-row').classList.toggle('d-none');
     });
 
     document.getElementById('cancel-add-btn').addEventListener('click', function () {
@@ -107,6 +108,7 @@
 
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function () {
+            document.getElementById('add-project-form-row').classList.add('d-none');
             const row = this.closest('tr');
             const adoProjectName = row.cells[0].innerText.trim();
             const asanaWorkspaceName = row.cells[1].innerText.trim();
@@ -137,7 +139,7 @@
                     } else {
                         alert('Failed to delete project');
                     }
-                });
+                }).catch(() => alert('Network error – could not reach server'));
             }
         });
     });
@@ -156,7 +158,7 @@
             } else {
                 alert('Failed to update project');
             }
-        });
+        }).catch(() => alert('Network error – could not reach server'));
     }
 </script>
 {{ end }}

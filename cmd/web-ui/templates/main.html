@@ -35,13 +35,13 @@
 				<div class="position-sticky pt-3">
 					<ul class="nav flex-column">
 						<li class="nav-item">
-							<a class="nav-link {{if eq .CurrentPage `home`}}active{{end}}" aria-current="page" href="/">
+							<a class="nav-link {{if eq .CurrentPage `home`}}active{{end}}" {{if eq .CurrentPage `home`}}aria-current="page"{{end}} href="/">
 								<i class="bi bi-house-door"></i>
 								Dashboard
 							</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link {{if eq .CurrentPage `projects`}}active{{end}}" href="/projects">
+							<a class="nav-link {{if eq .CurrentPage `projects`}}active{{end}}" {{if eq .CurrentPage `projects`}}aria-current="page"{{end}} href="/projects">
 								<i class="bi bi-kanban"></i>
 								Projects
 							</a>
