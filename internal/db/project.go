@@ -17,6 +17,8 @@ var (
 	ProjectsCollection = "projects"
 )
 
+const errADOProjectAlreadyMapped = "ADO project already mapped to a different Asana project"
+
 // Project represents a project with its corresponding names in ADO and Asana.
 type Project struct {
 	ID                 primitive.ObjectID `json:"id" bson:"_id"`
@@ -72,7 +74,7 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 		if existing.AsanaProjectName == project.AsanaProjectName && existing.AsanaWorkspaceName == project.AsanaWorkspaceName {
 			err = fmt.Errorf("project already exists")
 		} else {
-			err = fmt.Errorf("ADO project already mapped to a different Asana project")
+			err = fmt.Errorf(errADOProjectAlreadyMapped)
 		}
 		span.RecordError(err)
 		return err
@@ -82,7 +84,7 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 	_, err = collection.InsertOne(dbCtx, project)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
-			err = fmt.Errorf("ADO project already mapped to a different Asana project")
+			err = fmt.Errorf(errADOProjectAlreadyMapped)
 		} else {
 			err = fmt.Errorf("error inserting project: %v", err)
 		}
@@ -145,7 +147,7 @@ func (db *DB) UpdateProject(ctx context.Context, project Project) error {
 		return err
 	}
 	if err == nil {
-		err = fmt.Errorf("ADO project already mapped to a different Asana project")
+		err = fmt.Errorf(errADOProjectAlreadyMapped)
 		span.RecordError(err)
 		return err
 	}
