@@ -1,0 +1,7 @@
+linters-settings:
+  typecheck:
+    disable-test-files: true
+
+linters:
+  exclude-files:
+    - internal/azure/mock_.*\.go
