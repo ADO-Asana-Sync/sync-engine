@@ -54,3 +54,44 @@ func (a *Asana) ProjectGIDByName(ctx context.Context, workspaceName, projectName
 	}
 	return "", fmt.Errorf("project not found")
 }
+
+// ListProjects returns all projects within the given workspace.
+func (a *Asana) ListProjects(ctx context.Context, workspaceName string) ([]Project, error) {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "asana.ListProjects")
+	defer span.End()
+
+	workspaces, err := a.ListWorkspaces(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var wsID int64
+	found := false
+	for _, ws := range workspaces {
+		if ws.Name == workspaceName {
+			wsID = ws.ID
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("workspace not found")
+	}
+
+	client := asanaapi.NewClient(a.Client)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	projs, err := client.ListProjects(ctx, &asanaapi.Filter{Workspace: wsID})
+	if err != nil {
+		return nil, err
+	}
+	var result []Project
+	for _, p := range projs {
+		if p.GID != "" {
+			result = append(result, Project{GID: p.GID, Name: p.Name})
+		} else {
+			result = append(result, Project{GID: fmt.Sprint(p.ID), Name: p.Name})
+		}
+	}
+	return result, nil
+}
