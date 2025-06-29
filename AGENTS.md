@@ -117,6 +117,7 @@ When helping with this codebase:
 6. **Reference existing patterns** in the codebase
 7. **Include telemetry** in any new functionality
 8. **Implement graceful failure modes** for sync operations
+9. **Follow the rules in the .editorconfig file**
 
 ## Environment Configuration
 
