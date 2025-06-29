@@ -10,7 +10,7 @@ This document provides instructions for AI assistants (OpenAI Codex, GitHub Copi
 
 ## Key Components
 
-```
+```plaintext
 sync-engine/
 ├── cmd/
 │   ├── sync/           # Sync engine (controller-worker architecture)
@@ -122,7 +122,7 @@ When helping with this codebase:
 
 ## Environment Configuration
 
-```
+```plaintext
 # Required environment variables
 ADO_ORG_URL=https://dev.azure.com/organization
 ADO_PAT=personal_access_token
@@ -136,6 +136,7 @@ UPTRACE_ENVIRONMENT=development
 ## Codebase Status
 
 This is a work-in-progress project. When suggesting changes or additions, focus on:
+
 1. Completing core sync functionality
 2. Improving error handling and reliability
 3. Enhancing the web UI for configuration
