@@ -14,8 +14,8 @@ COPY ./go.mod .
 COPY ./go.sum .
 RUN go mod download
 COPY . .
-RUN mkdir /app
-RUN CGO_ENABLED=1 GOOS=linux \
+RUN mkdir /app && \
+	CGO_ENABLED=1 GOOS=linux \
 	go build \
 	-ldflags "-s -w -X 'main.Version=${VERSION}' -X 'main.Commit=${COMMIT}' -X 'main.Date=${DATE}'" \
 	-o /app/sync \
