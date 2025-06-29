@@ -18,6 +18,5 @@ jobs:
       - name: Lint Dockerfiles
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          with:
           dockerfile: | # Use a glob pattern to find all Dockerfiles
             **/Dockerfile
