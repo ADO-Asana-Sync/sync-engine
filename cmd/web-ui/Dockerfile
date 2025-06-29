@@ -1,5 +1,6 @@
 FROM golang:1.23-alpine AS builder
 
+# hadolint ignore=DL3018
 RUN apk add --no-cache \
 	g++ \
 	gcc \
@@ -22,6 +23,7 @@ RUN mkdir /app && \
 	./cmd/web-ui
 
 FROM alpine:3
+# hadolint ignore=DL3018
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/* ./
