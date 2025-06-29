@@ -1,147 +1,164 @@
 {{ define "content" }}
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<h1>Projects</h1>
+<div class="d-flex justify-content-end align-items-center mb-3">
+    <button type="button" id="add-project-btn" class="btn btn-primary" title="Add Project">
+        <i class="bi bi-plus-lg"></i> Add Project
+    </button>
+</div>
+
 {{ if .Error }}
-<div class="bg-pink-500 text-white text-center p-2 rounded mb-4">
-	{{ .Error }}
+<div class="alert alert-danger text-center" role="alert">
+    {{ .Error }}
 </div>
 {{ end }}
-<div class="container mx-auto p-4">
-	<button type="button" id="add-project-btn" class="btn create-btn" title="Add Project">
-		<span class="material-icons">add</span>
-	</button>
-	<table class="min-w-full bg-white mt-4">
-		<thead>
-			<tr>
-				<th class="py-2 px-4 text-right">ADO Project</th>
-				<th class="py-2 px-4 text-right">Asana Workspace</th>
-				<th class="py-2 px-4 text-left">Project</th>
-				<th class="py-2 px-4 text-left">Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-			<!-- Add Project Form Row -->
-			<tr id="add-project-form-row" class="hidden">
-				<td class="border px-4 py-2 text-right">
-					<input type="text" name="ado_project_name" form="add-project-form"
-						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
-				</td>
-				<td class="border px-4 py-2 text-right">
-					<input type="text" name="asana_workspace_name" form="add-project-form"
-						class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Workspace Name" required>
-				</td>
-				<td class="border px-4 py-2 text-left">
-					<input type="text" name="asana_project_name" form="add-project-form"
-						class="w-full p-2 border border-gray-300 rounded" placeholder="Asana Project Name" required>
-				</td>
-				<td class="border px-4 py-2 text-left">
-					<form id="add-project-form" method="POST" action="/add-project">
-						<button type="submit" class="btn add-btn" title="Add Project">
-							<span class="material-icons">check</span>
-						</button>
-					</form>
-				</td>
-			</tr>
-			<!-- Update Project Form Row -->
-			<tr id="update-project-form-row" class="hidden">
-				<td class="border px-4 py-2 text-right">
-					<input type="text" name="ado_project_name" id="update-ado-project-name" form="update-project-form"
-						class="w-full p-2 border border-gray-300 rounded" placeholder="ADO Project Name" required>
-				</td>
-				<td class="border px-4 py-2 text-right">
-					<input type="text" name="asana_workspace_name" id="update-asana-workspace-name"
-						form="update-project-form" class="w-full p-2 border border-gray-300 rounded"
-						placeholder="Asana Workspace Name" required>
-				</td>
-				<td class="border px-4 py-2 text-left">
-					<input type="text" name="asana_project_name" id="update-asana-project-name"
-						form="update-project-form" class="w-full p-2 border border-gray-300 rounded"
-						placeholder="Asana Project Name" required>
-				</td>
-				<td class="border px-4 py-2 text-left">
-					<form id="update-project-form" method="PUT" action="/update-project"
-						onsubmit="event.preventDefault(); updateProject();">
-						<input type="hidden" name="id" id="update-project-id">
-						<button type="submit" class="btn update-btn" title="Update Project">
-							<span class="material-icons">check</span>
-						</button>
-					</form>
-				</td>
-			</tr>
-			{{ range .Projects }}
-			<tr>
-				<td class="border px-4 py-2 text-right">{{ .ADOProjectName }}</td>
-				<td class="border px-4 py-2 text-right">{{ .AsanaWorkspaceName }}</td>
-				<td class="border px-4 py-2 text-left">{{ .AsanaProjectName }}</td>
-				<td class="border px-4 py-2 text-left">
-					<div class="action-buttons">
-						<button type="button" class="btn edit-btn" data-id="{{ .ID.Hex }}" title="Edit Project"
-							aria-label="Edit Project">
-							<span class="material-icons">edit</span>
-						</button>
-						<button type="button" class="btn delete-btn" data-id="{{ .ID.Hex }}" title="Delete Project"
-							aria-label="Delete Project">
-							<span class=" material-icons">delete</span>
-						</button>
-					</div>
-				</td>
-			</tr>
-			{{ end }}
-		</tbody>
-	</table>
+
+<div class="container p-0">
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col" class="text-end">ADO Project</th>
+                <th scope="col" class="text-end">Asana Workspace</th>
+                <th scope="col">Project</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Add Project Form Row -->
+            <tr id="add-project-form-row" class="d-none">
+                <td class="text-end">
+                    <input type="text" name="ado_project_name" form="add-project-form" class="form-control"
+                        placeholder="ADO Project Name" required>
+                </td>
+                <td class="text-end">
+                    <input type="text" name="asana_workspace_name" form="add-project-form" class="form-control"
+                        placeholder="Asana Workspace Name" required>
+                </td>
+                <td>
+                    <input type="text" name="asana_project_name" form="add-project-form" class="form-control"
+                        placeholder="Asana Project Name" required>
+                </td>
+                <td>
+                    <form id="add-project-form" method="POST" action="/add-project" class="d-flex">
+                        <button type="submit" class="btn btn-success me-2" aria-label="Confirm add project">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancel-add-btn" aria-label="Cancel add project">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <!-- Update Project Form Row -->
+            <tr id="update-project-form-row" class="d-none">
+                <td class="text-end">
+                    <input type="text" name="ado_project_name" id="update-ado-project-name" form="update-project-form"
+                        class="form-control" placeholder="ADO Project Name" required>
+                </td>
+                <td class="text-end">
+                    <input type="text" name="asana_workspace_name" id="update-asana-workspace-name"
+                        form="update-project-form" class="form-control" placeholder="Asana Workspace Name" required>
+                </td>
+                <td>
+                    <input type="text" name="asana_project_name" id="update-asana-project-name"
+                        form="update-project-form" class="form-control" placeholder="Asana Project Name" required>
+                </td>
+                <td>
+                    <form id="update-project-form" action="/update-project"
+                        onsubmit="event.preventDefault(); updateProject();" class="d-flex">
+                        <input type="hidden" name="id" id="update-project-id">
+                        <button type="submit" class="btn btn-success me-2" aria-label="Confirm update project">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancel-update-btn" aria-label="Cancel update project">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {{ range .Projects }}
+            <tr>
+                <td class="text-end">{{ .ADOProjectName }}</td>
+                <td class="text-end">{{ .AsanaWorkspaceName }}</td>
+                <td>{{ .AsanaProjectName }}</td>
+                <td>
+                    <div class="d-flex">
+                        <button type="button" class="btn btn-primary me-2 edit-btn" data-id="{{ .ID.Hex }}"
+                            title="Edit Project" aria-label="Edit Project">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger delete-btn" data-id="{{ .ID.Hex }}"
+                            title="Delete Project" aria-label="Delete Project">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
 </div>
 <script>
-	document.getElementById('add-project-btn').addEventListener('click', function () {
-		document.getElementById('add-project-form-row').classList.toggle('hidden');
-	});
+    document.getElementById('add-project-btn').addEventListener('click', function () {
+        document.getElementById('update-project-form-row').classList.add('d-none');
+        document.getElementById('add-project-form-row').classList.toggle('d-none');
+    });
 
-	document.querySelectorAll('.edit-btn').forEach(button => {
-		button.addEventListener('click', function () {
-			const row = this.closest('tr');
-			const adoProjectName = row.cells[0].innerText.trim();
-			const asanaWorkspaceName = row.cells[1].innerText.trim();
-			const asanaProjectName = row.cells[2].innerText.trim();
-			const projectId = this.getAttribute('data-id');
+    document.getElementById('cancel-add-btn').addEventListener('click', function () {
+        document.getElementById('add-project-form-row').classList.add('d-none');
+    });
 
-			document.getElementById('update-project-id').value = projectId;
-			document.getElementById('update-ado-project-name').value = adoProjectName;
-			document.getElementById('update-asana-workspace-name').value = asanaWorkspaceName;
-			document.getElementById('update-asana-project-name').value = asanaProjectName;
-			document.getElementById('update-project-form-row').classList.remove('hidden');
-		});
-	});
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            document.getElementById('add-project-form-row').classList.add('d-none');
+            const row = this.closest('tr');
+            const adoProjectName = row.cells[0].innerText.trim();
+            const asanaWorkspaceName = row.cells[1].innerText.trim();
+            const asanaProjectName = row.cells[2].innerText.trim();
+            const projectId = this.getAttribute('data-id');
 
-	document.querySelectorAll('.delete-btn').forEach(button => {
-		button.addEventListener('click', function () {
-			const projectId = this.getAttribute('data-id');
-			if (confirm('Are you sure you want to delete this project?')) {
-				fetch(`/delete-project?id=${projectId}`, {
-					method: 'DELETE'
-				}).then(response => {
-					if (response.ok) {
-						location.reload();
-					} else {
-						alert('Failed to delete project');
-					}
-				});
-			}
-		});
-	});
-	function updateProject() {
-		const form = document.getElementById('update-project-form');
-		const formData = new FormData(form);
-		const projectId = formData.get('id');
+            document.getElementById('update-project-id').value = projectId;
+            document.getElementById('update-ado-project-name').value = adoProjectName;
+            document.getElementById('update-asana-workspace-name').value = asanaWorkspaceName;
+            document.getElementById('update-asana-project-name').value = asanaProjectName;
+            document.getElementById('update-project-form-row').classList.remove('d-none');
+        });
+    });
 
-		fetch(`/update-project?id=${projectId}`, {
-			method: 'PUT',
-			body: new URLSearchParams(formData)
-		}).then(response => {
-			if (response.ok) {
-				location.reload();
-			} else {
-				alert('Failed to update project');
-			}
-		});
-	}
+    document.getElementById('cancel-update-btn').addEventListener('click', function () {
+        document.getElementById('update-project-form-row').classList.add('d-none');
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const projectId = this.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this project?')) {
+                fetch(`/delete-project?id=${projectId}`, {
+                    method: 'DELETE'
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to delete project');
+                    }
+                }).catch(() => alert('Network error – could not reach server'));
+            }
+        });
+    });
+
+    function updateProject() {
+        const form = document.getElementById('update-project-form');
+        const formData = new FormData(form);
+        const projectId = formData.get('id');
+
+        fetch(`/update-project?id=${projectId}`, {
+            method: 'PUT',
+            body: new URLSearchParams(formData)
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to update project');
+            }
+        }).catch(() => alert('Network error – could not reach server'));
+    }
 </script>
 {{ end }}
