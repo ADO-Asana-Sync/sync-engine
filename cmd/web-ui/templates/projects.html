@@ -13,7 +13,7 @@
 
 <div class="container p-0">
     <table class="table table-striped table-bordered">
-        <thead class="thead-dark">
+        <thead class="table-dark">
             <tr>
                 <th scope="col" class="text-end">ADO Project</th>
                 <th scope="col" class="text-end">Asana Workspace</th>
@@ -62,7 +62,7 @@
                         form="update-project-form" class="form-control" placeholder="Asana Project Name" required>
                 </td>
                 <td>
-                    <form id="update-project-form" method="PUT" action="/update-project"
+                    <form id="update-project-form" method="POST" action="/update-project"
                         onsubmit="event.preventDefault(); updateProject();" class="d-flex">
                         <input type="hidden" name="id" id="update-project-id">
                         <button type="submit" class="btn btn-success me-2" title="Update Project">
