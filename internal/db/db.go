@@ -2,12 +2,14 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,6 +34,7 @@ var (
 type DBInterface interface {
 	Connect(ctx context.Context, uri string) error
 	Disconnect(ctx context.Context) error
+	EnsureIndexes(ctx context.Context) error
 	Projects(ctx context.Context) ([]Project, error)
 	AddProject(ctx context.Context, project Project) error
 	RemoveProject(ctx context.Context, id primitive.ObjectID) error
@@ -98,4 +101,26 @@ func (db *DB) Disconnect(ctx context.Context) error {
 
 func clientOptions(uri string) *options.ClientOptions {
 	return options.Client().ApplyURI(uri).SetMaxPoolSize(getMaxPoolSize()).SetRetryReads(true).SetRetryWrites(true)
+}
+
+// EnsureIndexes creates required MongoDB indexes.
+func (db *DB) EnsureIndexes(ctx context.Context) error {
+	ctx, span := helpers.StartSpanOnTracerFromContext(ctx, "db.EnsureIndexes")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, Timeout)
+	defer cancel()
+
+	coll := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
+	_, err := coll.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{bson.E{Key: "ado_project_name", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return fmt.Errorf("error creating project index: %v", err)
+	}
+
+	return nil
 }

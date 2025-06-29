@@ -1,12 +1,14 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ADO-Asana-Sync/sync-engine/internal/helpers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/net/context"
 )
@@ -15,6 +17,8 @@ var (
 	// ProjectsCollection is the name of the collection in the database
 	ProjectsCollection = "projects"
 )
+
+const errADOProjectAlreadyMapped = "ADO project already mapped to a different Asana project"
 
 // Project represents a project with its corresponding names in ADO and Asana.
 type Project struct {
@@ -56,22 +60,23 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
-	// Check if the project already exists.
-	filter := bson.M{
-		"ado_project_name":     project.ADOProjectName,
-		"asana_project_name":   project.AsanaProjectName,
-		"asana_workspace_name": project.AsanaWorkspaceName,
-	}
-	count, err := collection.CountDocuments(dbCtx, filter)
-	if err != nil {
+	// Check if the ADO project is already mapped.
+	adoFilter := bson.M{"ado_project_name": project.ADOProjectName}
+	var existing Project
+	err := collection.FindOne(dbCtx, adoFilter).Decode(&existing)
+	if err != nil && err != mongo.ErrNoDocuments {
 		err = fmt.Errorf("error checking for existing project: %v", err)
 		span.RecordError(err)
 		return err
 	}
 
-	// If the project exists, throw an error.
-	if count > 0 {
-		err = fmt.Errorf("project already exists")
+	// If a mapping exists, return an error.
+	if err == nil {
+		if existing.AsanaProjectName == project.AsanaProjectName && existing.AsanaWorkspaceName == project.AsanaWorkspaceName {
+			err = fmt.Errorf("project already exists")
+		} else {
+			err = errors.New(errADOProjectAlreadyMapped)
+		}
 		span.RecordError(err)
 		return err
 	}
@@ -79,7 +84,11 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 	// Insert the new project with a unique ID.
 	_, err = collection.InsertOne(dbCtx, project)
 	if err != nil {
-		err = fmt.Errorf("error inserting project: %v", err)
+		if mongo.IsDuplicateKeyError(err) {
+			err = errors.New(errADOProjectAlreadyMapped)
+		} else {
+			err = fmt.Errorf("error inserting project: %v", err)
+		}
 		span.RecordError(err)
 		return err
 	}
@@ -126,6 +135,24 @@ func (db *DB) UpdateProject(ctx context.Context, project Project) error {
 	defer cancel()
 	collection := db.Client.Database(DatabaseName).Collection(ProjectsCollection)
 
+	// Ensure the ADO project isn't mapped to another Asana project.
+	adoFilter := bson.M{
+		"ado_project_name": project.ADOProjectName,
+		"_id":              bson.M{"$ne": project.ID},
+	}
+	var existing Project
+	err := collection.FindOne(dbCtx, adoFilter).Decode(&existing)
+	if err != nil && err != mongo.ErrNoDocuments {
+		err = fmt.Errorf("error checking for existing project: %v", err)
+		span.RecordError(err)
+		return err
+	}
+	if err == nil {
+		err = errors.New(errADOProjectAlreadyMapped)
+		span.RecordError(err)
+		return err
+	}
+
 	// Update the project using the ID.
 	span.SetAttributes(attribute.String("project_id", project.ID.String()))
 	filter := bson.M{"_id": project.ID}
@@ -136,7 +163,7 @@ func (db *DB) UpdateProject(ctx context.Context, project Project) error {
 			"asana_workspace_name": project.AsanaWorkspaceName,
 		},
 	}
-	_, err := collection.UpdateOne(dbCtx, filter, update)
+	_, err = collection.UpdateOne(dbCtx, filter, update)
 	if err != nil {
 		err = fmt.Errorf("error updating project: %v", err)
 		span.RecordError(err)
