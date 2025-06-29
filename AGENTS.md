@@ -1,131 +1,140 @@
-# AI Agents Guidelines for the ADO-Asana-Sync Project
+# ADO-Asana-Sync - AI Assistant Instructions
 
-This document provides guidance for AI agents working with the ADO-Asana-Sync sync-engine codebase.
+This document provides instructions for AI assistants (OpenAI Codex, GitHub Copilot, Gemini) working with the ADO-Asana-Sync codebase.
 
-## Project Overview
+## Project Summary
 
-ADO-Asana-Sync is a Go application that synchronizes work items from Azure DevOps (ADO) to Asana using the official APIs. The application follows a one-way sync model, with Azure DevOps serving as the single source of truth. Configuration and sync records are stored in MongoDB.
+**Purpose**: Go application synchronizing Azure DevOps work items to Asana tasks (one-way sync)  
+**Data Storage**: MongoDB for configuration and sync records  
+**Source of Truth**: Azure DevOps (ADO)
 
-### Key Components
+## Key Components
 
-- **Sync Engine**: A controller-worker architecture that handles the synchronization process
-- **Web UI**: A configuration interface for managing project mappings and triggering syncs
-- **Database**: MongoDB for storing configuration and sync state
-
-## Architecture
-
-The project follows a standard Go project layout as recommended by [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
-
-### Main Components
-
-1. **Sync Service (`cmd/sync/`)**: 
-   - `controller.go`: Polls Azure DevOps for changes and queues work items
-   - `worker.go`: Processes individual sync tasks
-   - `main.go`: Application entry point and setup
-
-2. **Web UI (`cmd/web-ui/`)**:
-   - Provides configuration interface
-   - Manages project mappings
-   - Triggers sync operations
-
-3. **Core Libraries (`internal/`)**:
-   - `asana/`: Asana API client
-   - `azure/`: Azure DevOps API client
-   - `db/`: MongoDB interactions
-   - `helpers/`: Utility functions
-
-## Development Focus Areas
-
-When working on this codebase, agents should focus on implementing the following requirements:
-
-1. **Task Adoption**: Detect existing incomplete Asana tasks by title and adopt them
-2. **Work Item Mapping**: Map ADO items to Asana tasks according to hierarchy rules
-3. **One-Way Sync**: Sync new and updated ADO work items to Asana
-4. **Tagging**: Tag all synced Asana tasks with a configurable tag
-5. **Database Records**: Track each ADO-Asana item pair in MongoDB
-6. **Retention**: Purge database records for closed tasks after a configurable period
-7. **Delta Sync**: Poll Azure DevOps for changes since the last sync
-8. **Full Sync**: Compare all managed items' timestamps against the database
-9. **Web UI**: Provide configuration, manual triggers, and authentication
-10. **Pull Request Sync**: Create Asana tasks for ADO pull requests
-11. **User Assignment Filtering**: Only sync items assigned to users who exist in Asana
-12. **Project Mapping**: Only sync configured ADO-Asana project pairs
-13. **Deployment**: Docker containers for sync service, Web UI, and MongoDB
-14. **Telemetry**: OpenTelemetry instrumentation with Uptrace integration
-
-## Coding Guidelines
-
-1. **Go Standards**: Follow standard Go coding conventions and idioms
-2. **Error Handling**: Properly handle errors and provide meaningful error messages
-3. **Logging**: Use structured logging via logrus
-4. **Tracing**: Instrument code with OpenTelemetry for observability
-5. **Testing**: Write unit tests for all core functionality
-6. **Commit Messages**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
-7. **Complexity Scanning**: Scan the code with gocognit and keep the complexity below 15 where possible
-
-## Synchronization Logic
-
-The sync engine operates as follows:
-
-1. **Controller** (`controller.go`):
-   - Retrieves the timestamp of the last successful sync from MongoDB
-   - Queries Azure DevOps for all items changed since that timestamp
-   - Queues changed items for processing by workers
-
-2. **Workers** (`worker.go`):
-   - Process items from the queue
-   - Retrieve full details from Azure DevOps
-   - Check if the item exists in Asana (by title for new items, or by stored mapping)
-   - Create or update the corresponding Asana task
-   - Store the mapping in MongoDB
-
-## Data Models
-
-Key data structures include:
-
-1. **Project Mapping**: Links an Azure DevOps project to an Asana project
-2. **Task Mapping**: Tracks the relationship between an ADO work item and its Asana task
-3. **SyncTask**: Represents a unit of work in the sync queue
-
-## Environment Setup
-
-The application requires the following environment variables:
-
-- `ADO_ORG_URL`: Azure DevOps organization URL
-- `ADO_PAT`: Azure DevOps Personal Access Token
-- `ASANA_PAT`: Asana Personal Access Token
-- `MONGO_URI`: MongoDB connection string
-- `SLEEP_TIME`: Duration between sync cycles
-- `UPTRACE_DSN`: Uptrace Data Source Name
-- `UPTRACE_ENVIRONMENT`: Environment name for Uptrace
-
-## Docker Deployment
-
-The application is containerized with separate services:
-- `sync`: The sync engine service
-- `web-ui`: The web interface
-- `mongo`: The MongoDB database
-
-Run the application with Docker Compose:
 ```
-docker compose up --build --remove-orphans
+sync-engine/
+├── cmd/
+│   ├── sync/           # Sync engine (controller-worker architecture)
+│   └── web-ui/         # Web UI for configuration
+├── internal/
+│   ├── asana/          # Asana API client
+│   ├── azure/          # Azure DevOps API client  
+│   ├── db/             # MongoDB interactions
+│   └── helpers/        # Utility functions
+└── deploy/            # Deployment configuration
 ```
 
-## Resource Links
+## Core Functionality
 
-- GitHub Repository: [https://github.com/ADO-Asana-Sync/sync-engine](https://github.com/ADO-Asana-Sync/sync-engine)
-- Documentation: See README.md and inline code comments
+1. **Controller** (`cmd/sync/controller.go`):
+   - Polls ADO for changed work items since last sync
+   - Queues changed items to a channel for worker processing
+   - Handles full and delta sync scheduling
 
-## Advice for AI Assistance
+2. **Worker** (`cmd/sync/worker.go`):
+   - Processes items from the queue
+   - Creates/updates corresponding Asana tasks
+   - Records mappings in MongoDB
+
+3. **Data Models**:
+   - `ProjectMapping`: Links ADO project to Asana project
+   - `TaskMapping`: Tracks ADO work item to Asana task relationship
+   - `SyncTask`: Work unit in the sync queue
+
+## Sync Requirements
+
+- **Task Adoption**: Match existing Asana tasks by title
+- **Item Hierarchy**: Map ADO hierarchy to Asana tasks/subtasks/sections
+- **One-Way Sync**: ADO → Asana only
+- **Tagging**: Apply configurable tag to all synced items
+- **Retention**: Auto-purge closed items after configurable period
+- **Delta + Full Sync**: Both incremental and full synchronization
+
+## Code Patterns
+
+When writing code for this project:
+
+```go
+// Example controller-worker pattern
+func controller(ctx context.Context, queue chan<- SyncTask) {
+    // Get last sync timestamp from MongoDB
+    lastSync := getLastSyncTime(ctx)
+    
+    // Query ADO for changes
+    changedItems := queryADOChanges(ctx, lastSync)
+    
+    // Queue items for processing
+    for _, item := range changedItems {
+        queue <- SyncTask{
+            WorkItemID: item.ID,
+            ProjectID: item.ProjectID,
+        }
+    }
+}
+
+func worker(ctx context.Context, queue <-chan SyncTask) {
+    for task := range queue {
+        // Process each sync task
+        processTask(ctx, task)
+    }
+}
+
+// Always instrument with OpenTelemetry
+func processTask(ctx context.Context, task SyncTask) {
+    ctx, span := tracer.Start(ctx, "processTask")
+    defer span.End()
+    
+    // Error handling pattern
+    adoItem, err := getADOWorkItem(ctx, task.WorkItemID)
+    if err != nil {
+        span.RecordError(err)
+        log.WithError(err).Error("Failed to get ADO work item")
+        return
+    }
+    
+    // ...
+}
+```
+
+## Development Guidelines
+
+- **Go Standards**: Follow standard Go idioms and structure
+- **Error Handling**: Use proper error wrapping/propagation
+- **Logging**: Structured logging with logrus
+- **Telemetry**: OpenTelemetry instrumentation
+- **Testing**: Unit test core functionality
+- **Configuration**: Environment variables for all configurable parts
+- **MongoDB**: Use appropriate indexes and efficient queries
+
+## AI Assistant Instructions
 
 When helping with this codebase:
 
-1. **Context Awareness**: Understand the differences between ADO and Asana concepts/models
-2. **Completion Status**: Note that this is a work-in-progress project
-3. **API Understanding**: Familiarize yourself with both the Azure DevOps and Asana API capabilities
-4. **Concurrency Model**: Be aware of the controller-worker pattern and channel usage
-5. **Database Interactions**: Consider MongoDB document structure when designing queries
-6. **Telemetry**: Maintain proper tracing throughout any new code
-7. **Error Handling**: Ensure robust error handling in sync operations
-8. **Authentication**: Handle API tokens securely
-9. **Performance Considerations**: Be mindful of API rate limits and batch operations where possible
+1. **Suggest code** that follows Go idioms and project patterns
+2. **Consider API limits** for both Azure DevOps and Asana
+3. **Maintain error handling** with proper logging and tracing
+4. **Check for race conditions** in the controller-worker model
+5. **Structure MongoDB queries** for efficiency
+6. **Reference existing patterns** in the codebase
+7. **Include telemetry** in any new functionality
+8. **Implement graceful failure modes** for sync operations
+
+## Environment Configuration
+
+```
+# Required environment variables
+ADO_ORG_URL=https://dev.azure.com/organization
+ADO_PAT=personal_access_token
+ASANA_PAT=personal_access_token
+MONGO_URI=mongodb://localhost:27017
+SLEEP_TIME=5m
+UPTRACE_DSN=https://token@api.uptrace.dev/project_id
+UPTRACE_ENVIRONMENT=development
+```
+
+## Codebase Status
+
+This is a work-in-progress project. When suggesting changes or additions, focus on:
+1. Completing core sync functionality
+2. Improving error handling and reliability
+3. Enhancing the web UI for configuration
+4. Adding telemetry for operational visibility
