@@ -102,6 +102,7 @@ func processTask(ctx context.Context, task SyncTask) {
 - **Logging**: Structured logging with logrus
 - **Telemetry**: OpenTelemetry instrumentation
 - **Testing**: Unit test core functionality
+- **Linting**: Run golangci-lint against all code changes
 - **Configuration**: Environment variables for all configurable parts
 - **MongoDB**: Use appropriate indexes and efficient queries
 
