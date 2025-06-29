@@ -18,6 +18,7 @@ type mockDB struct{ wrote bool }
 
 func (m *mockDB) Connect(ctx context.Context, uri string) error                  { return nil }
 func (m *mockDB) Disconnect(ctx context.Context) error                           { return nil }
+func (m *mockDB) EnsureIndexes(ctx context.Context) error                        { return nil }
 func (m *mockDB) Projects(ctx context.Context) ([]db.Project, error)             { return nil, nil }
 func (m *mockDB) AddProject(ctx context.Context, project db.Project) error       { return nil }
 func (m *mockDB) RemoveProject(ctx context.Context, id primitive.ObjectID) error { return nil }

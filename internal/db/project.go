@@ -81,7 +81,11 @@ func (db *DB) AddProject(ctx context.Context, project Project) error {
 	// Insert the new project with a unique ID.
 	_, err = collection.InsertOne(dbCtx, project)
 	if err != nil {
-		err = fmt.Errorf("error inserting project: %v", err)
+		if mongo.IsDuplicateKeyError(err) {
+			err = fmt.Errorf("ADO project already mapped to a different Asana project")
+		} else {
+			err = fmt.Errorf("error inserting project: %v", err)
+		}
 		span.RecordError(err)
 		return err
 	}

@@ -103,6 +103,12 @@ func (app *App) setup(ctx context.Context) error {
 		return fmt.Errorf("error connecting to the DB: %v", err)
 	}
 
+	if err := app.DB.EnsureIndexes(ctx); err != nil {
+		span.RecordError(err, trace.WithStackTrace(true))
+		span.SetStatus(codes.Error, err.Error())
+		return fmt.Errorf("error ensuring DB indexes: %v", err)
+	}
+
 	// Azure DevOps setup.
 	log.Info("connecting to Azure DevOps")
 	app.Azure = azure.NewAzure()
