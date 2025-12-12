@@ -41,7 +41,7 @@ jobs:
       - name: Run golangci-lint
         run: ./bin/golangci-lint run --out-format checkstyle --issues-exit-code=0 > golangci-lint-report.xml
       - name: Lint Dockerfiles
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         continue-on-error: true
         with:
           dockerfile: Dockerfile
