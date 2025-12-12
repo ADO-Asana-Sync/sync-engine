@@ -139,7 +139,9 @@ func (app *App) setup(ctx context.Context) error {
 
 	// Database setup.
 	log.Info("connecting to the DB")
-	app.DB = &db.DB{}
+	if app.DB == nil {
+		app.DB = &db.DB{}
+	}
 	connstr := os.Getenv("MONGO_URI")
 	err := app.DB.Connect(ctx, connstr)
 	if err != nil {
@@ -156,14 +158,18 @@ func (app *App) setup(ctx context.Context) error {
 
 	// Azure DevOps setup.
 	log.Info("connecting to Azure DevOps")
-	app.Azure = azure.NewAzure()
+	if app.Azure == nil {
+		app.Azure = azure.NewAzure()
+	}
 	org := os.Getenv("ADO_ORG_URL")
 	pat := os.Getenv("ADO_PAT")
 	app.Azure.Connect(ctx, org, pat)
 
 	// Asana setup.
 	log.Info("connecting to Asana")
-	app.Asana = &asana.Asana{}
+	if app.Asana == nil {
+		app.Asana = &asana.Asana{}
+	}
 	app.Asana.Connect(ctx, os.Getenv("ASANA_PAT"))
 
 	app.CacheTTL = getCacheTTL()
