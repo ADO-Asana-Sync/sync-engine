@@ -84,6 +84,6 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20240508051311-c1c6bf0061b0
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/qw4n7y/go-asana v0.0.0-20230907082829-a06fe43d330b
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.34.0
 	golang.org/x/text v0.32.0 // indirect
 )
